@@ -1,0 +1,142 @@
+/* Form Card */
+
+.register-card{
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(0,0,0,.08);
+}
+
+/* Card Header */
+
+.register-card .card-header{
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 18px 24px;
+}
+
+.register-card .card-header h5{
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Card Body */
+
+.register-card .card-body{
+    padding: 24px;
+}
+
+/* Label */
+
+.form-label{
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+/* Input */
+
+.form-control,
+.form-select{
+
+    height: 48px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    box-shadow: none;
+
+    font-size: 15px;
+
+    transition: all .2s ease;
+}
+
+/* Input Focus */
+
+.form-control:focus,
+.form-select:focus{
+
+    border-color: #2563eb;
+
+    box-shadow: 0 0 0 .15rem rgba(37,99,235,.15);
+
+}
+
+/* Placeholder */
+
+.form-control::placeholder{
+    color:#9ca3af;
+}
+
+/* Select */
+
+.form-select{
+    cursor:pointer;
+}
+
+/* Validation */
+
+.is-invalid{
+    border-color:#dc3545;
+}
+
+.invalid-feedback{
+    display:block;
+    font-size:13px;
+}
+
+/* Checkbox */
+
+.form-check-input{
+
+    width:18px;
+
+    height:18px;
+
+    cursor:pointer;
+}
+
+.form-check-label{
+
+    cursor:pointer;
+
+    color:#4b5563;
+}
+
+/* Button */
+
+.btn-primary{
+
+    height:50px;
+
+    border-radius:8px;
+
+    font-weight:600;
+
+    font-size:16px;
+
+    transition:.3s;
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-1px);
+
+}
+
+/* Section Gap */
+
+.card{
+
+    margin-bottom:24px;
+}
+
+/* Required */
+
+.text-danger{
+    font-weight:600;
+}
