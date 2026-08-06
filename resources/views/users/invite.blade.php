@@ -30,7 +30,7 @@
 
                 <div class="card-body">
 
-                    <form action="#" method="POST">
+                    <form action="{{ route('users.store') }}" method="POST">
 
                         @csrf
                         <div class="mb-3">
@@ -54,6 +54,66 @@
                             @enderror
 
                         </div>
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                First Name
+
+                            </label>
+
+                            <input type="text" name="first_name" class="form-control" value="{{ old('first_name') }}">
+
+                            @error('first_name')
+
+                            <small class="text-danger">
+
+                                {{ $message }}
+
+                            </small>
+
+                            @enderror
+
+                        </div>
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Last Name
+
+                            </label>
+
+                            <input type="text" name="last_name" class="form-control" value="{{ old('last_name') }}">
+
+                            @error('last_name')
+
+                            <small class="text-danger">
+
+                                {{ $message }}
+
+                            </small>
+
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Username
+
+                            </label>
+
+                            <input type="text" name="username" class="form-control" value="{{ old('username') }}">
+
+                            @error('username')
+
+                            <small class="text-danger">
+
+                                {{ $message }}
+
+                            </small>
+
+                            @enderror
                         <div class="mb-4">
 
                             <label class="form-label">
@@ -61,16 +121,24 @@
                                 Role
 
                             </label>
+                         
+                         <select name="role_id" class="form-select">
 
-                            <select name="role_id" class="form-select">
+                            <option value="">
+                                Select Role
+                            </option>
 
-                                <option value="">
+                            @foreach($roles as $role)
 
-                                    Select Role
-
+                                <option
+                                    value="{{ $role->id }}"
+                                >
+                                    {{ $role->name }}
                                 </option>
 
-                            </select>
+                            @endforeach
+
+                        </select>
 
                             @error('role_id')
 

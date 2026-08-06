@@ -13,6 +13,8 @@ Route::middleware('guest.custom')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/store-organization', [AuthController::class, 'storeOrganization'])->name('store.organization');
     Route::post('/user-login', [AuthController::class, 'loginPost'])->name('user.login');
+    Route::get('/invitation/{token}', [AuthController::class, 'activateInvitation'])->name('invitation.accept');
+    Route::post('/invitation/{token}', [AuthController::class, 'storePassword'])->name('invitation.store');
 
 });
 
@@ -24,6 +26,7 @@ Route::middleware('auth.custom')->group(function () {
     Route::put('/settings', [OrganizationController::class, 'update'])->name('organization.update');
     Route::get('/users', [UserController::class, 'users'])->name('users.index');
     Route::get('/users/invite', [UserController::class, 'invite'])->name('users.invite');
+    Route::post('/users/Add', [UserController::class, 'addUser'])->name('users.store');
 
 });
 

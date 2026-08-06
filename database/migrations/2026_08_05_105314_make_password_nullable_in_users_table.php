@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+           Schema::table('users', function (Blueprint $table) {
+
+            $table->string('password')->nullable()->change();
+
         });
     }
 
@@ -22,6 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
+      Schema::table('users', function (Blueprint $table) {
+
+            $table->string('password')->nullable(false)->change();
+
+        });
     }
 };

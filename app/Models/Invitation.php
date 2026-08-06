@@ -8,6 +8,7 @@ class Invitation extends Model
 {
     protected $fillable = [
         'organization_id',
+        'user_id',
         'role_id',
         'invited_by',
         'email',
@@ -39,5 +40,9 @@ class Invitation extends Model
     public function invitedBy()
     {
         return $this->belongsTo(User::class, 'invited_by');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

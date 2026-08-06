@@ -21,7 +21,7 @@ class AuthService
         $organization = null;
         DB::transaction(function () use ($data, &$user, &$organization) {
          
-            $organization = Organization::create([
+        $organization = Organization::create([
                 'name' => $data['name'],
                 'website' => $data['website'] ?? null,
                 'slug'      => Str::slug($data['name']),
@@ -111,7 +111,7 @@ class AuthService
             'organization_id' => $user->organization_id,
             'user_id' => $user->id,
         ]);
-          return true;
+        return true;
 
      
     }

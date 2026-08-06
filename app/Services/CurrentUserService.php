@@ -21,4 +21,13 @@ class CurrentUserService
         $user = $this->getUser();
         return $user ? $user->organization : null;
     }
+    public function getRoles()
+    {
+        return $this->getUser()
+            ->organization
+            ->roles()
+            ->where('name', '!=', 'owner')
+            ->orderBy('name')
+            ->get();
+    }
 }
