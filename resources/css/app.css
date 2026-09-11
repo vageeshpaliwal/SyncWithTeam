@@ -1,15 +1,257 @@
-/* Bootstrap */
+/* Modern Design System for SyncWithTeam */
 @import "bootstrap/dist/css/bootstrap.min.css";
+@import "./dark-mode.css";
 
-body{
-    background:#F8FAFC;
-    font-family:Arial, Helvetica, sans-serif;
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --primary-light: #EEF2FF;
+    --success-color: #10B981;
+    --success-light: #ECFDF5;
+    --warning-color: #F59E0B;
+    --warning-light: #FFFBEB;
+    --danger-color: #EF4444;
+    --danger-light: #FEF2F2;
+    --dark-bg: #0F172A;
+    --sidebar-bg: #0B0F19;
+    --sidebar-hover: #1E293B;
+    --body-bg: #F8FAFC;
+    --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    --card-shadow-hover: 0 16px 32px -6px rgba(15, 23, 42, 0.09), 0 6px 12px -4px rgba(15, 23, 42, 0.04);
+    --border-radius: 16px;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-a{
-    text-decoration:none;
+/* Global Smooth Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
 }
 
-.container{
-    max-width:1200px;
+body {
+    background-color: var(--body-bg);
+    font-family: var(--font-sans);
+    color: #1E293B;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0F172A;
+}
+
+a {
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Glassmorphic & Modern Cards */
+.card {
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: rgba(79, 70, 229, 0.25);
+}
+
+/* Clean Tables */
+.table {
+    --bs-table-hover-bg: #F8FAFC;
+}
+
+.table th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748B;
+    border-bottom: 1px solid #E2E8F0;
+    background-color: #F8FAFC;
+}
+
+.table td {
+    border-bottom: 1px solid #F1F5F9;
+    vertical-align: middle;
+}
+
+/* Modern Dropdowns */
+.dropdown-menu {
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.12);
+    border-radius: 14px;
+    padding: 0.5rem;
+    animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    color: #334155;
+}
+
+.dropdown-item:hover {
+    background-color: #F1F5F9;
+    color: var(--primary-color);
+}
+
+/* Form Styling & Controls */
+.form-label {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.01em;
+}
+
+.form-control, .form-select {
+    font-family: var(--font-sans);
+    border-radius: 10px;
+    border: 1px solid #CBD5E1;
+    padding: 0.625rem 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #0F172A;
+    background-color: #FFFFFF;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.form-control::placeholder {
+    color: #94A3B8;
+    font-weight: 400;
+}
+
+.form-control:hover, .form-select:hover {
+    border-color: #94A3B8;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    outline: none;
+}
+
+/* Custom Buttons */
+.btn {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background-color: #DC2626;
+    border-color: #DC2626;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Modern Pill Badges */
+.badge {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Nav Tabs & Pills */
+.nav-pills .nav-link {
+    font-family: var(--font-sans);
+    color: #64748B;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.6rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #F1F5F9;
+    color: #334155;
+}
+
+/* Micro Animations */
+@keyframes pulse-ring {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.08); opacity: 0.4; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.live-pulse {
+    animation: pulse-ring 2s infinite ease-in-out;
+}
+
+/* Toast Customization */
+.custom-toast {
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    border: none;
+    font-family: var(--font-sans);
 }

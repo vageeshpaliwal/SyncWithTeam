@@ -17,11 +17,23 @@ class Organization extends Model
         'email',
         'phone',
         'status',
+        'allowed_ips',
+        'geofence_latitude',
+        'geofence_longitude',
+        'geofence_radius_meters',
+        'enforce_ip_restriction',
+        'enforce_geofence',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'enforce_ip_restriction' => 'boolean',
+        'enforce_geofence' => 'boolean',
+        'geofence_latitude' => 'float',
+        'geofence_longitude' => 'float',
+        'geofence_radius_meters' => 'integer',
     ];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -42,5 +54,10 @@ class Organization extends Model
     public function invitations()
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    public function departments()
+    {
+        return $this->hasMany(Department::class);
     }
 }

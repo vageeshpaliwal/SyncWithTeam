@@ -38,6 +38,12 @@
 
                     @endif
 
+                    @error('token')
+                        <div class="alert alert-danger">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
                     <form action="{{ route('user.login') }}" method="POST">
 
                         @csrf

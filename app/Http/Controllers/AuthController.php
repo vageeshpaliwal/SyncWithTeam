@@ -1,18 +1,21 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\SetPasswordRequest;
 use App\Services\AuthService;
-use App\Models\Invitation;
+use App\Services\UserService;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function __construct(AuthService $authService)
-    {
-        $this->authService = $authService;
-    }
+    public function __construct(
+        protected AuthService $authService,
+        protected UserService $userService,
+    ) {}
     public function welcome()
     {
        
@@ -30,9 +33,30 @@ class AuthController extends Controller
 
     public function activateInvitation(string $token)
     {
-        $invitation = Invitation::where('token', $token)->firstOrFail();
+        try {
+            $invitation = $this->userService->findValidInvitation($token);
+        } catch (ValidationException $e) {
+            return redirect()
+                ->route('login')
+                ->withErrors($e->errors());
+        }
 
         return view('auth.set-password', compact('invitation'));
+    }
+
+    public function storePassword(SetPasswordRequest $request, string $token)
+    {
+        try {
+            $this->userService->activateInvitation($token, $request->validated('password'));
+        } catch (ValidationException $e) {
+            return redirect()
+                ->route('login')
+                ->withErrors($e->errors());
+        }
+
+        return redirect()
+            ->route('login')
+            ->with('success', 'Account activated successfully. You can now log in.');
     }
 
     public function storeOrganization(RegisterRequest $request)

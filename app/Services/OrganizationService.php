@@ -57,6 +57,8 @@ class OrganizationService
             */
 
             $data['slug'] = Str::slug($data['name']);
+            $data['enforce_ip_restriction'] = $request->boolean('enforce_ip_restriction');
+            $data['enforce_geofence'] = $request->boolean('enforce_geofence');
 
             /*
             |--------------------------------------------------------------------------
@@ -65,6 +67,7 @@ class OrganizationService
             */
 
             $organization->update($data);
+
 
         });
 

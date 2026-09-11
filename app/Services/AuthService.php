@@ -14,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
+    public function __construct(
+        protected PermissionService $permissionService,
+    ) {}
+
     public function register(array $data)
     {
 
@@ -33,32 +37,49 @@ class AuthService
             'name'            => 'Owner',
             'code'            => 'owner',
             'description'     => 'Organization Owner',
-            'is_system'       => true,
+            'is_default'       => true,
         ]);
 
-        Role::create([
+        $adminRole = Role::create([
             'organization_id' => $organization->id,
             'name'            => 'Admin',
             'code'            => 'admin',
             'description'     => 'Administrator',
-            'is_system'       => true,
+            'is_default'       => true,
         ]);
 
-        Role::create([
+        $hrRole = Role::create([
+            'organization_id' => $organization->id,
+            'name'            => 'HR',
+            'code'            => 'hr',
+            'description'     => 'Human Resources Manager',
+            'is_default'       => true,
+        ]);
+
+        $managerRole = Role::create([
             'organization_id' => $organization->id,
             'name'            => 'Manager',
             'code'            => 'manager',
-            'description'     => 'Manager',
-            'is_system'       => true,
+            'description'     => 'Project Manager',
+            'is_default'       => true,
         ]);
 
-        Role::create([
+        $employeeRole = Role::create([
             'organization_id' => $organization->id,
             'name'            => 'Employee',
             'code'            => 'employee',
             'description'     => 'Employee',
-            'is_system'       => true,
+            'is_default'       => true,
         ]);
+
+        $this->permissionService->assignDefaultRolePermissions(
+            $ownerRole,
+            $adminRole,
+            $managerRole,
+            $employeeRole,
+            $hrRole
+        );
+
 
         // Create the owner user
         $user = User::create([
@@ -82,26 +103,25 @@ class AuthService
         $user = User::where('email', $data['email'])->first();
         if(!$user)
         {
-            dd('User not found');
             throw ValidationException::withMessages([
                 'email' => 'User not found.',
             ]);
         }
 
         if (!Hash::check($data['password'], $user->password)) {
-            dd('Invalid password');
+         
             throw ValidationException::withMessages([
                 'password' => 'Invalid password.',
             ]);
         }
         if ($user->status !=true) {
-            dd('User account is inactive');
+          
             throw ValidationException::withMessages([
                 'email' => 'Your account is inactive.',
             ]);
         }
         if ($user->organization->status != true) {
-            dd('Organization is inactive');
+         
             throw ValidationException::withMessages([
                 'email' => 'Your organization is inactive.',
             ]);

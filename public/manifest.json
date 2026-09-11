@@ -1,0 +1,35 @@
+﻿{
+  "name": "SyncWithTeam - Time Tracker & Work Management",
+  "short_name": "SyncWithTeam",
+  "description": "Modern time tracking, project logs, attendance, and team productivity management platform.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0F19",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Time Logs",
+      "short_name": "Logs",
+      "description": "View and manage daily time tracking logs",
+      "url": "/attendance",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Projects",
+      "short_name": "Projects",
+      "description": "View active team projects",
+      "url": "/projects",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "192x192" }]
+    }
+  ]
+}

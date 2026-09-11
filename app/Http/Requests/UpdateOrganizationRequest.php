@@ -24,17 +24,20 @@ class UpdateOrganizationRequest extends FormRequest
             */
 
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-
             'name' => 'required|string|max:255',
-
             'website' => 'nullable|url|max:255',
-
             'email' => 'required|email|max:255|unique:organizations,email,' . $organizationId,
-
             'slug' => 'nullable|string|max:255|unique:organizations,slug,' . $organizationId,
-            
-
+            'phone' => 'nullable|string|max:50',
+            'country' => 'nullable|string|max:100',
+            'allowed_ips' => 'nullable|string',
+            'geofence_latitude' => 'nullable|numeric|between:-90,90',
+            'geofence_longitude' => 'nullable|numeric|between:-180,180',
+            'geofence_radius_meters' => 'nullable|integer|min:10|max:50000',
+            'enforce_ip_restriction' => 'nullable|boolean',
+            'enforce_geofence' => 'nullable|boolean',
         ];
+
     }
 
     public function messages(): array

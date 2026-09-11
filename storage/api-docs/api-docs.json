@@ -1,0 +1,134 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SyncWithTeam API Documentation",
+        "description": "API specifications for SyncWithTeam backend services",
+        "contact": {
+            "email": "support@syncwithteam.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Primary API Gateway"
+        }
+    ],
+    "paths": {
+        "/v1/departments": {
+            "get": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "List all departments",
+                "description": "Retrieve a list of departments for a specific organization.",
+                "operationId": "4c4f9666e837a09e3a00229dfbbc8d0d",
+                "parameters": [
+                    {
+                        "name": "organization_id",
+                        "in": "query",
+                        "description": "The ID of the organization",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "organization_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Engineering"
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Software development team"
+                                            },
+                                            "status": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization ID"
+                    }
+                }
+            }
+        },
+        "/v1/health": {
+            "get": {
+                "tags": [
+                    "System"
+                ],
+                "summary": "Get API service health status",
+                "description": "Returns the health and operational status of the API services.",
+                "operationId": "5d85e58ea0c44796a26b9150917a303a",
+                "responses": {
+                    "200": {
+                        "description": "API is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "healthy"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Departments",
+            "description": "Departments"
+        },
+        {
+            "name": "System",
+            "description": "System"
+        }
+    ]
+}
