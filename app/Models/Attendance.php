@@ -54,4 +54,9 @@ class Attendance extends Model
     {
         return $this->belongsTo(Task::class);
     }
+
+    public function screenshots()
+    {
+        return $this->hasMany(AttendanceScreenshot::class);
+    }
 }

@@ -1,0 +1,7 @@
+﻿{
+  "name": "syncwithteam-desktop-tracker",
+  "version": "1.0.0",
+  "description": "Silent desktop companion tracker for SyncWithTeam",
+  "main": "tracker.cjs",
+  "type": "commonjs"
+}

@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.custom' => \App\Http\Middleware\GuestMiddleware::class,
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'attendance/screenshot',
+            'api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

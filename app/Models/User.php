@@ -100,6 +100,11 @@ class User extends Authenticatable
         return $this->hasMany(Leave::class);
     }
 
+    public function screenshots()
+    {
+        return $this->hasMany(AttendanceScreenshot::class);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Accessors & Helpers

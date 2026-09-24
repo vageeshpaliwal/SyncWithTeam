@@ -76,6 +76,68 @@ class AttendanceController extends Controller
             $dailyTotals[$dateKey] = $totalSeconds;
         }
 
+        // Group personal logs by Week (Clockify/Toggl multi-week timeline)
+        $myWeeklyGroupedLogs = [];
+        $weeklyGroups = $myLogs->groupBy(function ($log) {
+            $date = $log->clock_in_at ?: $log->date;
+            $startOfWeek = $date ? $date->copy()->startOfWeek() : now()->startOfWeek();
+            $endOfWeek = $date ? $date->copy()->endOfWeek() : now()->endOfWeek();
+            return $startOfWeek->format('Y-m-d') . '|' . $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M, Y');
+        });
+
+        foreach ($weeklyGroups as $wKey => $wLogs) {
+            [$wStartIso, $wDateRange] = explode('|', $wKey, 2);
+            $wStartDate = \Carbon\Carbon::parse($wStartIso);
+            $isThisWeek = $wStartDate->isCurrentWeek();
+            $isLastWeek = $wStartDate->isLastWeek();
+
+            $wTotalSeconds = 0;
+            $daysInWeek = $wLogs->groupBy(function ($log) {
+                $date = $log->clock_in_at ?: $log->date;
+                return $date ? $date->format('Y-m-d') : 'other';
+            });
+
+            $daysFormatted = [];
+            foreach ($daysInWeek as $dKey => $dLogs) {
+                $dTotalSecs = 0;
+                foreach ($dLogs as $l) {
+                    if ($l->clock_out_at && $l->clock_in_at) {
+                        $start = $l->clock_in_at;
+                        $end = $l->clock_out_at;
+                        if ($start > $end) {
+                            $temp = $start;
+                            $start = $end;
+                            $end = $temp;
+                        }
+                        $dTotalSecs += $start->diffInSeconds($end);
+                    }
+                }
+                $wTotalSeconds += $dTotalSecs;
+                $daysFormatted[$dKey] = [
+                    'date_key' => $dKey,
+                    'total_seconds' => $dTotalSecs,
+                    'logs' => $dLogs,
+                ];
+            }
+
+            $wHrs = floor($wTotalSeconds / 3600);
+            $wMins = floor(($wTotalSeconds % 3600) / 60);
+            $wSecs = $wTotalSeconds % 60;
+
+            $weekTitle = $isThisWeek ? 'This Week' : ($isLastWeek ? 'Last Week' : 'Week of ' . $wStartDate->format('d M, Y'));
+
+            $myWeeklyGroupedLogs[] = [
+                'start_date' => $wStartIso,
+                'title' => $weekTitle,
+                'date_range' => $wDateRange,
+                'is_this_week' => $isThisWeek,
+                'is_last_week' => $isLastWeek,
+                'total_seconds' => $wTotalSeconds,
+                'total_formatted' => sprintf('%02d:%02d:%02d', $wHrs, $wMins, $wSecs),
+                'days' => $daysFormatted,
+            ];
+        }
+
         // Calculate Personal Weekly & Daily Aggregate Stats
         $wStart = now()->startOfWeek();
         $wEnd = now()->endOfWeek();
@@ -215,16 +277,77 @@ class AttendanceController extends Controller
             }
         }
 
+        // 5. Screenshots Day-Wise (Current Week Mon-Sun) Logic
+        $weekStart = now()->startOfWeek();
+        $weekEnd = now()->endOfWeek();
+
+        $currentWeekDays = [];
+        $tempDay = $weekStart->copy();
+        while ($tempDay->lte($weekEnd)) {
+            $currentWeekDays[] = [
+                'date' => $tempDay->toDateString(),
+                'day_name' => $tempDay->format('l'),
+                'short_day' => $tempDay->format('D'),
+                'formatted' => $tempDay->format('d M'),
+                'is_today' => $tempDay->isToday(),
+                'is_future' => $tempDay->isFuture() && !$tempDay->isToday(),
+            ];
+            $tempDay->addDay();
+        }
+
+        $canViewTeam = $this->currentUserService->hasPermission('attendance.view');
+        $targetScreenshotUserId = request('screenshot_user_id') ?: (request('employee_id') ?: $user->id);
+        if (!$canViewTeam) {
+            $targetScreenshotUserId = $user->id;
+        }
+
+        $selectedScreenshotDate = request('screenshot_date', now()->toDateString());
+        $selectedScreenshotUser = \App\Models\User::find($targetScreenshotUserId) ?? $user;
+
+        $weekScreenshotsCount = \App\Models\AttendanceScreenshot::where('organization_id', $org->id)
+            ->where('user_id', $targetScreenshotUserId)
+            ->whereBetween('captured_at', [$weekStart->copy()->startOfDay(), $weekEnd->copy()->endOfDay()])
+            ->selectRaw('DATE(captured_at) as log_date, count(*) as total')
+            ->groupBy('log_date')
+            ->pluck('total', 'log_date')
+            ->toArray();
+
+        $initialScreenshots = \App\Models\AttendanceScreenshot::where('organization_id', $org->id)
+            ->where('user_id', $targetScreenshotUserId)
+            ->whereDate('captured_at', $selectedScreenshotDate)
+            ->with(['project', 'task'])
+            ->orderBy('captured_at', 'asc')
+            ->get();
+
+        $initialScreenshotsFormatted = $initialScreenshots->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'url' => $s->url,
+                'captured_at_formatted' => $s->captured_at ? $s->captured_at->format('h:i A') : '-',
+                'captured_at_full' => $s->captured_at ? $s->captured_at->format('d M Y, h:i A') : '-',
+                'project_name' => $s->project?->name ?: 'Miscellaneous',
+                'task_title' => $s->task?->title ?: 'Active Work',
+                'user_id' => $s->user_id,
+            ];
+        })->values();
+
         return view('attendance.index', compact(
             'projects',
             'activeAttendance',
             'activeLeave',
             'groupedLogs',
             'dailyTotals',
+            'myWeeklyGroupedLogs',
             'teamLogs',
             'organizationUsers',
             'teamWeeklyStats',
-            'myPersonalStats'
+            'myPersonalStats',
+            'currentWeekDays',
+            'selectedScreenshotUser',
+            'selectedScreenshotDate',
+            'weekScreenshotsCount',
+            'initialScreenshots',
+            'initialScreenshotsFormatted'
         ));
     }
 
@@ -753,13 +876,62 @@ class AttendanceController extends Controller
         $currentWeekHours = round($cwSecs / 3600, 1);
         $currentWeekPercent = min(100, round(($currentWeekHours / $weeklyQuotaHours) * 100));
 
+        // Screenshots Day-Wise (Current Week Mon-Sun) for this user
+        $currentWeekDays = [];
+        $tempDay = $wStart->copy();
+        while ($tempDay->lte($wEnd)) {
+            $currentWeekDays[] = [
+                'date' => $tempDay->toDateString(),
+                'day_name' => $tempDay->format('l'),
+                'short_day' => $tempDay->format('D'),
+                'formatted' => $tempDay->format('d M'),
+                'is_today' => $tempDay->isToday(),
+                'is_future' => $tempDay->isFuture() && !$tempDay->isToday(),
+            ];
+            $tempDay->addDay();
+        }
+
+        $selectedScreenshotDate = request('screenshot_date', now()->toDateString());
+
+        $weekScreenshotsCount = \App\Models\AttendanceScreenshot::where('organization_id', $org->id)
+            ->where('user_id', $user->id)
+            ->whereBetween('captured_at', [$wStart->copy()->startOfDay(), $wEnd->copy()->endOfDay()])
+            ->selectRaw('DATE(captured_at) as log_date, count(*) as total')
+            ->groupBy('log_date')
+            ->pluck('total', 'log_date')
+            ->toArray();
+
+        $initialScreenshots = \App\Models\AttendanceScreenshot::where('organization_id', $org->id)
+            ->where('user_id', $user->id)
+            ->whereDate('captured_at', $selectedScreenshotDate)
+            ->with(['project', 'task'])
+            ->orderBy('captured_at', 'asc')
+            ->get();
+
+        $initialScreenshotsFormatted = $initialScreenshots->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'url' => $s->url,
+                'captured_at_formatted' => $s->captured_at ? $s->captured_at->format('h:i A') : '-',
+                'captured_at_full' => $s->captured_at ? $s->captured_at->format('d M Y, h:i A') : '-',
+                'project_name' => $s->project?->name ?: 'Miscellaneous',
+                'task_title' => $s->task?->title ?: 'Active Work',
+                'user_id' => $s->user_id,
+            ];
+        })->values();
+
         return view('attendance.user_logs', compact(
             'user',
             'weeklyStats',
             'monthlyStats',
             'currentWeekHours',
             'currentWeekPercent',
-            'weeklyQuotaHours'
+            'weeklyQuotaHours',
+            'currentWeekDays',
+            'selectedScreenshotDate',
+            'weekScreenshotsCount',
+            'initialScreenshots',
+            'initialScreenshotsFormatted'
         ));
     }
 

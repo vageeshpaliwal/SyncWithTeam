@@ -14,6 +14,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\TaskCommentController;
+use App\Http\Controllers\AttendanceScreenshotController;
 
 
 Route::middleware('guest.custom')->group(function () {
@@ -61,6 +62,20 @@ Route::middleware('auth.custom')->group(function () {
     Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroyLog'])
         ->middleware('permission:attendance.manage')
         ->name('attendance.destroy');
+
+    // Attendance Screenshots
+    Route::post('/attendance/screenshot', [AttendanceScreenshotController::class, 'store'])
+        ->middleware('permission:attendance.manage')
+        ->name('attendance.screenshot.store');
+
+    Route::get('/attendance/screenshots', [AttendanceScreenshotController::class, 'getScreenshots'])
+        ->name('attendance.screenshots.get');
+
+    Route::delete('/attendance/screenshots/{screenshot}', [AttendanceScreenshotController::class, 'destroy'])
+        ->name('attendance.screenshots.destroy');
+
+    Route::get('/attendance/download-tracker', [AttendanceScreenshotController::class, 'downloadTrackerPackage'])
+        ->name('attendance.download-tracker');
 
     Route::get('/projects', [ProjectController::class, 'index'])
         ->middleware('permission:projects.view')

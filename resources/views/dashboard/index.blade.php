@@ -7,9 +7,12 @@
 @php
     $currentUserService = new \App\Services\CurrentUserService();
     $roleCode = strtolower($currentUser->role?->code ?? '');
-    $isAdminOrOwner = in_array($roleCode, ['admin', 'owner', 'hr', 'manager']) || 
-                      $currentUserService->hasPermission('users.view') || 
-                      $currentUserService->hasPermission('roles.view');
+    $isOwnerOrAdmin = in_array($roleCode, ['admin', 'owner']);
+    $isManager = ($roleCode === 'manager');
+    $isHr = ($roleCode === 'hr');
+    $isLeadership = $isOwnerOrAdmin || $isManager || $isHr || 
+                     $currentUserService->hasPermission('users.view') || 
+                     $currentUserService->hasPermission('leaves.approve');
 @endphp
 
 <div class="container-fluid px-0">
@@ -41,11 +44,19 @@
                 <i class="fa-regular fa-calendar me-1 text-secondary"></i>{{ now()->format('D, M d, Y') }}
             </span>
         </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 font-monospace fw-semibold shadow-sm" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                <i class="fa-solid fa-plus me-1"></i> Add Task
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 font-monospace fw-semibold" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#applyLeaveModal">
+                <i class="fa-solid fa-plane-departure me-1"></i> Apply Leave
+            </button>
+        </div>
     </div>
 
-    @if($isAdminOrOwner)
-        <!-- Admin / HR Executive Metric Cards -->
-        <div class="row g-3 mb-4">
+    <!-- Metric Cards Row -->
+    <div class="row g-3 mb-4">
+        @if($isOwnerOrAdmin || $isHr)
             <!-- Active Members -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('users.index') }}" class="text-decoration-none">
@@ -63,17 +74,17 @@
                 </a>
             </div>
 
-            <!-- Departments -->
+            <!-- Total Projects -->
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('departments.index') }}" class="text-decoration-none">
+                <a href="{{ route('projects.index') }}" class="text-decoration-none">
                     <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Departments</span>
-                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $stats['departments'] }}</h3>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Projects</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myProjects->count() }}</h3>
                             </div>
                             <div class="rounded-3 bg-success-subtle text-success p-3">
-                                <i class="fa-solid fa-sitemap fs-4"></i>
+                                <i class="fa-solid fa-folder-kanban fs-4"></i>
                             </div>
                         </div>
                     </div>
@@ -99,30 +110,155 @@
                 </a>
             </div>
 
-            <!-- Roles Managed -->
+            <!-- Departments -->
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('roles.index') }}" class="text-decoration-none">
+                <a href="{{ route('departments.index') }}" class="text-decoration-none">
                     <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Roles Managed</span>
-                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $stats['roles'] }}</h3>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Departments</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $stats['departments'] }}</h3>
                             </div>
                             <div class="rounded-3 bg-purple-subtle text-purple p-3" style="background-color: #F3E8FF; color: #8B5CF6;">
-                                <i class="fa-solid fa-user-shield fs-4"></i>
+                                <i class="fa-solid fa-sitemap fs-4"></i>
                             </div>
                         </div>
                     </div>
                 </a>
             </div>
-        </div>
 
-        <div class="row g-4">
+        @elseif($isManager)
+            <!-- Team Members -->
+            <div class="col-xl-3 col-md-6">
+                <a href="{{ route('users.index') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Team Members</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ count($teamMembers ?? []) }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-primary-subtle text-primary p-3">
+                                <i class="fa-solid fa-users fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Projects -->
+            <div class="col-xl-3 col-md-6">
+                <a href="{{ route('projects.index') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Department Projects</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myProjects->count() }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-success-subtle text-success p-3">
+                                <i class="fa-solid fa-folder-kanban fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Pending Leaves Queue -->
+            <div class="col-xl-3 col-md-6">
+                <a href="{{ route('leaves.index') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Leave Requests</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">
+                                    {{ \App\Models\Leave::where('organization_id', $currentUser->organization_id)->where('status', 'pending')->count() }}
+                                </h3>
+                            </div>
+                            <div class="rounded-3 bg-warning-subtle text-warning p-3">
+                                <i class="fa-solid fa-plane-departure fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- My Active Tasks -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">My Tasks</span>
+                            <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myTasks->count() }}</h3>
+                        </div>
+                        <div class="rounded-3 bg-purple-subtle text-purple p-3" style="background-color: #F3E8FF; color: #8B5CF6;">
+                            <i class="fa-solid fa-list-check fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        @else
+            <!-- Employee Metric Cards -->
+            <!-- Leave Balance -->
+            <div class="col-xl-4 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">Leave Balance</span>
+                            @php $curQ = $currentUser->current_quarter_leave_stats; @endphp
+                            <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $curQ['remaining'] ?? 0 }}</h3>
+                        </div>
+                        <div class="rounded-3 bg-primary-subtle text-primary p-2.5">
+                            <i class="fa-solid fa-calendar-check fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Projects -->
+            <div class="col-xl-4 col-md-6">
+                <a href="{{ route('projects.index') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Projects</span>
+                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myProjects->count() }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-success-subtle text-success p-2.5">
+                                <i class="fa-solid fa-folder-kanban fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- My Assigned Tasks -->
+            <div class="col-xl-4 col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">My Active Tasks</span>
+                            <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myTasks->count() }}</h3>
+                        </div>
+                        <div class="rounded-3 bg-warning-subtle text-warning p-2.5">
+                            <i class="fa-solid fa-list-check fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    @if($isLeadership)
+        <!-- Leadership Overview: Pending Leaves Queue & Department Staffing -->
+        <div class="row g-4 mb-4">
             <!-- Pending Leave Requests Queue -->
             <div class="col-lg-6">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-dark fs-6"><i class="fa-solid fa-clock me-2 text-warning"></i> Recent Leave Applications</h5>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
+                    <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-clock text-warning fs-5 me-1"></i>
+                            <h6 class="fw-bold text-dark mb-0 fs-6">Recent Leave Applications</h6>
+                        </div>
                         <a href="{{ route('leaves.index') }}" class="btn btn-sm btn-link text-decoration-none fw-semibold">View All</a>
                     </div>
                     <div class="card-body p-0">
@@ -139,17 +275,17 @@
                                 <div class="list-group-item p-3.5 hover-bg-light transition-all border-bottom">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="mb-0 fw-bold text-dark">{{ $lReq->user->full_name }}</h6>
+                                            <h6 class="mb-0 fw-bold text-dark fs-6">{{ $lReq->user->full_name }}</h6>
                                             <small class="text-muted d-block mb-1">{{ $lReq->user->department?->name ?? 'No Department' }} &bull; {{ $lReq->user->display_designation }}</small>
-                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill font-monospace" style="font-size: 0.75rem;">
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill font-monospace" style="font-size: 0.72rem;">
                                                 {{ $lReq->start_date->format('M d') }} - {{ $lReq->end_date->format('M d') }} ({{ ucfirst($lReq->type) }})
                                             </span>
                                         </div>
                                         <div class="text-end">
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill d-block mb-2 font-monospace" style="font-size: 0.7rem;">
-                                                {{ $lReq->user->remaining_leaves_days }} Days Remaining
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill d-block mb-2 font-monospace" style="font-size: 0.68rem;">
+                                                {{ $lReq->user->remaining_leaves_days }} Days Left
                                             </span>
-                                            <a href="{{ route('leaves.index') }}" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                            <a href="{{ route('leaves.index') }}" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
                                                 Review Request
                                             </a>
                                         </div>
@@ -158,7 +294,7 @@
                             @empty
                                 <div class="text-center py-5 text-muted">
                                     <i class="fa-solid fa-circle-check fs-2 text-success opacity-50 mb-2"></i>
-                                    <p class="mb-0 fw-medium">No pending leave applications.</p>
+                                    <p class="mb-0 fw-medium small">No pending leave applications.</p>
                                 </div>
                             @endforelse
                         </div>
@@ -168,14 +304,17 @@
 
             <!-- Department Staffing Overview -->
             <div class="col-lg-6">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-dark fs-6"><i class="fa-solid fa-sitemap me-2 text-primary"></i> Department Overview</h5>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
+                    <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-sitemap text-primary fs-5 me-1"></i>
+                            <h6 class="fw-bold text-dark mb-0 fs-6">Department Overview</h6>
+                        </div>
                         <a href="{{ route('departments.index') }}" class="btn btn-sm btn-link text-decoration-none fw-semibold">View All</a>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4">Department</th>
@@ -194,13 +333,13 @@
                                             </td>
                                             <td>
                                                 @if($deptManager)
-                                                    <span class="badge bg-light text-dark border"><i class="fa-solid fa-user-tie text-primary me-1"></i> {{ $deptManager->full_name }}</span>
+                                                    <span class="badge bg-light text-dark border rounded-pill"><i class="fa-solid fa-user-tie text-primary me-1"></i> {{ $deptManager->full_name }}</span>
                                                 @else
-                                                    <span class="text-muted small font-italic">Unassigned</span>
+                                                    <span class="text-muted small fst-italic">Unassigned</span>
                                                 @endif
                                             </td>
                                             <td class="pe-4 text-end">
-                                                <span class="badge bg-primary text-white rounded-pill font-monospace px-2.5">{{ $dept->users->count() }} Members</span>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-2.5">{{ $dept->users->count() }} Members</span>
                                             </td>
                                         </tr>
                                     @empty
@@ -215,151 +354,109 @@
                 </div>
             </div>
         </div>
+    @endif
 
-    @else
-        <!-- Employee Dashboard Metric Cards (Simple, Small & Clean Cards) -->
-        <div class="row g-3 mb-4">
-            <!-- Leave Balance Metric Card -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">Leave Balance</span>
-                            @php $curQ = $currentUser->current_quarter_leave_stats; @endphp
-                            <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $curQ['remaining'] }}</h3>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 font-monospace fw-semibold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#applyLeaveModal">
-                                <i class="fa-solid fa-plane-departure me-1"></i> Apply Leave
-                            </button>
-                        </div>
+    <!-- Projects & Active Tasks Row (For All Roles) -->
+    <div class="row g-4 mb-4">
+        <!-- Projects List -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden h-100">
+                <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-folder-kanban text-primary fs-5 me-1"></i>
+                        <h6 class="fw-bold text-dark mb-0 fs-6">Projects I'm Working On</h6>
                     </div>
-                </div>
-            </div>
-
-            <!-- Assigned Active Projects Card -->
-            <div class="col-xl-4 col-md-6">
-                <a href="{{ route('projects.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Projects</span>
-                                <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myProjects->count() }}</h3>
-                            </div>
-                            <div class="rounded-3 bg-success-subtle text-success p-2.5">
-                                <i class="fa-solid fa-folder-kanban fs-5"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- My Assigned Tasks Card -->
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">My Active Tasks</span>
-                            <h3 class="mb-0 fw-bold text-dark font-monospace">{{ $myTasks->count() }}</h3>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1 font-monospace fw-semibold shadow-sm" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#createTaskModal">
-                                <i class="fa-solid fa-plus me-1"></i> Add Task
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-4">
-            <!-- Projects List -->
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden h-100">
-                    <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fa-solid fa-folder-kanban text-primary fs-5 me-1"></i>
-                            <h6 class="fw-bold text-dark mb-0 fs-6">Projects I'm Working On</h6>
-                        </div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 font-monospace fw-bold">{{ $myProjects->count() }}</span>
+                        <a href="{{ route('projects.index') }}" class="btn btn-sm btn-link text-decoration-none fw-semibold p-0" style="font-size: 0.8rem;">View All</a>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            @forelse($myProjects as $proj)
-                                <div class="list-group-item px-4 py-3.5 hover-bg-light transition-all border-bottom">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @forelse($myProjects as $proj)
+                            <div class="list-group-item px-4 py-3.5 hover-bg-light transition-all border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="d-flex align-items-center gap-2">
                                         <h6 class="mb-0 fw-bold text-dark fs-6">
                                             <a href="{{ route('projects.show', $proj->id) }}" class="text-decoration-none text-dark hover-primary">
                                                 {{ $proj->name }}
                                             </a>
                                         </h6>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-2.5 py-1" style="font-size: 0.72rem;">
-                                            {{ $proj->tasks_count }} Tasks
-                                        </span>
+                                        @if($proj->status === 'planning')
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill font-monospace" style="font-size: 0.65rem;">PLANNING</span>
+                                        @elseif($proj->status === 'active')
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace" style="font-size: 0.65rem;">ACTIVE</span>
+                                        @endif
+                                        @if($proj->team_lead_id === $currentUser->id)
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill font-monospace" style="font-size: 0.65rem;">TEAM LEAD</span>
+                                        @endif
                                     </div>
-                                    @if($proj->description)
-                                        <p class="text-muted mb-0 text-truncate" style="max-width: 360px; font-size: 0.82rem;">
-                                            {{ $proj->description }}
-                                        </p>
-                                    @endif
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-2.5 py-1" style="font-size: 0.72rem;">
+                                        {{ $proj->tasks_count }} Tasks
+                                    </span>
                                 </div>
-                            @empty
-                                <div class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-folder-open fs-2 text-secondary opacity-50 mb-2"></i>
-                                    <p class="mb-0 fw-medium small">You are not assigned to any active projects currently.</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Tasks List -->
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden h-100">
-                    <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fa-solid fa-list-check text-warning fs-5 me-1"></i>
-                            <h6 class="fw-bold text-dark mb-0 fs-6">My Active Tasks</h6>
-                        </div>
-                        <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 font-monospace fw-bold">{{ $myTasks->count() }}</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            @forelse($myTasks as $task)
-                                <div class="list-group-item px-4 py-3.5 hover-bg-light transition-all border-bottom">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold text-dark fs-6">{{ $task->title }}</h6>
-                                            <small class="text-muted d-flex align-items-center gap-1" style="font-size: 0.78rem;">
-                                                <i class="fa-regular fa-folder text-primary me-0.5"></i> {{ $task->project?->name ?? 'General Work' }}
-                                            </small>
-                                        </div>
-                                        <div>
-                                            @if($task->status === 'done')
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Done</span>
-                                            @elseif($task->status === 'review')
-                                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">In Review</span>
-                                            @elseif($task->status === 'in_progress')
-                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">In Progress</span>
-                                            @else
-                                                <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">To Do</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-clipboard-check fs-2 text-success opacity-50 mb-2"></i>
-                                    <p class="mb-0 fw-medium small">No active tasks assigned to you right now.</p>
-                                </div>
-                            @endforelse
-                        </div>
+                                @if($proj->description)
+                                    <p class="text-muted mb-0 text-truncate" style="max-width: 380px; font-size: 0.82rem;">
+                                        {{ $proj->description }}
+                                    </p>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-folder-open fs-2 text-secondary opacity-50 mb-2"></i>
+                                <p class="mb-0 fw-medium small">No active projects assigned currently.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
-    @endif
+
+        <!-- Active Tasks List -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden h-100">
+                <div class="card-header bg-white py-3.5 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-list-check text-warning fs-5 me-1"></i>
+                        <h6 class="fw-bold text-dark mb-0 fs-6">My Active Tasks</h6>
+                    </div>
+                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 font-monospace fw-bold">{{ $myTasks->count() }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @forelse($myTasks as $task)
+                            <div class="list-group-item px-4 py-3.5 hover-bg-light transition-all border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark fs-6">{{ $task->title }}</h6>
+                                        <small class="text-muted d-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                                            <i class="fa-regular fa-folder text-primary me-0.5"></i> {{ $task->project?->name ?? 'General Work' }}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        @if($task->status === 'done')
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Done</span>
+                                        @elseif($task->status === 'review')
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">In Review</span>
+                                        @elseif($task->status === 'in_progress')
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">In Progress</span>
+                                        @else
+                                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 text-uppercase fw-bold" style="font-size: 0.7rem;">To Do</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-clipboard-check fs-2 text-success opacity-50 mb-2"></i>
+                                <p class="mb-0 fw-medium small">No active tasks assigned to you right now.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Live Team Status & Office Highlights Section (For All Users) -->
     <div class="row g-4 mb-4">

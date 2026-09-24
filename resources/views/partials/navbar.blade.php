@@ -339,6 +339,7 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                if (typeof stopScreenCaptureTracker === 'function') stopScreenCaptureTracker();
                 window.location.reload();
             } else if (data.missing_details) {
                 const modalEl = document.getElementById('navbarStopTrackerModal');
@@ -413,6 +414,7 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                if (typeof stopScreenCaptureTracker === 'function') stopScreenCaptureTracker();
                 window.location.reload();
             } else {
                 if (submitBtn) {
