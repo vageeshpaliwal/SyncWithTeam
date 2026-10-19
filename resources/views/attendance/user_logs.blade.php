@@ -33,7 +33,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="border rounded-2 px-2.5 py-1 bg-light text-center">
                         <div class="text-muted small text-uppercase font-monospace" style="font-size: 0.65rem;">This Week</div>
-                        <div class="fw-bold text-dark fs-6">{{ $currentWeekHours }} / 40.0 <span class="text-muted small fw-normal" style="font-size: 0.72rem;">Hrs</span></div>
+                        <div class="fw-bold text-dark fs-6 font-monospace">{{ $currentWeekHours >= 1.0 ? $currentWeekHours . ' Hrs' : ($currentWeekFormatted ?? '00:00:00') }} <span class="text-muted small fw-normal" style="font-size: 0.72rem;">/ 40.0 Hrs</span></div>
                     </div>
                     <div class="border rounded-2 px-2.5 py-1 bg-light text-center">
                         <div class="text-muted small text-uppercase font-monospace" style="font-size: 0.65rem;">Active Days</div>
@@ -84,7 +84,7 @@
                                     </div>
                                     <div>
                                         <span class="badge {{ $wStat['percent'] >= 100 ? 'bg-success text-white' : 'bg-primary text-white' }} px-2.5 py-1 rounded-pill font-monospace fw-bold" style="font-size: 0.78rem;">
-                                            Total: {{ $wStat['hours'] }} / 40.0 Hrs
+                                            Total: {{ $wStat['hours'] >= 1.0 ? $wStat['hours'] . ' Hrs' : $wStat['formatted_total'] }} / 40.0 Hrs
                                         </span>
                                     </div>
                                 </div>
@@ -92,51 +92,51 @@
                                 <!-- Week Sessions Table -->
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0" style="font-size: 0.84rem;">
-                                        <thead class="table-light text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.3px;">
+                                        <thead class="table-light text-uppercase text-muted fw-bold" style="font-size: 0.72rem; letter-spacing: 0.4px;">
                                             <tr>
-                                                <th class="ps-3.5 py-2">Date & Day</th>
-                                                <th class="py-2">Task Description</th>
-                                                <th class="py-2">Project</th>
-                                                <th class="py-2 text-center">Clock In</th>
-                                                <th class="py-2 text-center">Clock Out</th>
-                                                <th class="pe-3.5 py-2 text-end">Duration</th>
+                                                <th class="ps-4 py-2.5">Date & Day</th>
+                                                <th class="py-2.5">Task Description</th>
+                                                <th class="py-2.5">Project</th>
+                                                <th class="py-2.5 text-center">Clock In</th>
+                                                <th class="py-2.5 text-center">Clock Out</th>
+                                                <th class="pe-4 py-2.5 text-end">Duration</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($wStat['logs'] as $logItem)
                                                 <tr>
-                                                    <td class="ps-3.5 py-2">
-                                                        <span class="fw-semibold text-dark font-monospace me-1">{{ $logItem->clock_in_at->format('M d, Y') }}</span>
-                                                        <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.68rem;">{{ $logItem->clock_in_at->format('D') }}</span>
+                                                    <td class="ps-4 py-3">
+                                                        <span class="fw-semibold text-body font-monospace me-1.5" style="font-size: 0.88rem;">{{ $logItem->clock_in_at->format('M d, Y') }}</span>
+                                                        <span class="badge bg-body-tertiary text-secondary border font-monospace" style="font-size: 0.7rem;">{{ $logItem->clock_in_at->format('D') }}</span>
                                                     </td>
-                                                    <td class="py-2">
-                                                        <span class="fw-semibold text-dark">{{ $logItem->task?->title ?: 'General Work' }}</span>
+                                                    <td class="py-3">
+                                                        <span class="fw-semibold text-body" style="font-size: 0.88rem;">{{ $logItem->task?->title ?: 'General Work' }}</span>
                                                     </td>
-                                                    <td class="py-2">
+                                                    <td class="py-3">
                                                         @if($logItem->project)
                                                             @php
                                                                 $cSeed = md5($logItem->project->name);
                                                                 $hue = hexdec(substr($cSeed, 0, 2)) % 360;
                                                             @endphp
-                                                            <span class="badge rounded-pill font-monospace border px-2.5 py-0.5" style="background-color: hsl({{ $hue }}, 70%, 95%); color: hsl({{ $hue }}, 70%, 35%); border-color: hsl({{ $hue }}, 70%, 85%) !important; font-size: 0.72rem;">
+                                                            <span class="badge rounded-pill font-sans border px-2.5 py-1" style="background-color: hsl({{ $hue }}, 70%, 95%); color: hsl({{ $hue }}, 70%, 35%); border-color: hsl({{ $hue }}, 70%, 85%) !important; font-size: 0.75rem; font-weight: 600;">
                                                                 📁 {{ $logItem->project->name }}
                                                             </span>
                                                         @else
-                                                            <span class="text-muted small">-</span>
+                                                            <span class="text-muted small">&ndash;</span>
                                                         @endif
                                                     </td>
-                                                    <td class="py-2 text-center font-monospace">
-                                                        <span class="badge bg-light text-secondary border px-2 py-0.5 fw-semibold" style="font-size: 0.72rem;">
-                                                            <i class="fa-regular fa-clock me-1 text-primary"></i>{{ $logItem->clock_in_at->format('h:i:s A') }}
+                                                    <td class="py-3 text-center font-monospace">
+                                                        <span class="badge bg-body-tertiary text-secondary border px-2.5 py-1 fw-semibold" style="font-size: 0.78rem;">
+                                                            <i class="fa-regular fa-clock me-1.5 text-primary"></i>{{ $logItem->clock_in_at->format('h:i:s A') }}
                                                         </span>
                                                     </td>
-                                                    <td class="py-2 text-center font-monospace">
-                                                        <span class="badge bg-light text-dark border px-2 py-0.5 fw-semibold" style="font-size: 0.72rem;">
-                                                            <i class="fa-solid fa-flag-checkered me-1 text-danger"></i>{{ $logItem->clock_out_at ? $logItem->clock_out_at->format('h:i:s A') : 'Active' }}
+                                                    <td class="py-3 text-center font-monospace">
+                                                        <span class="badge bg-body-tertiary text-body border px-2.5 py-1 fw-semibold" style="font-size: 0.78rem;">
+                                                            <i class="fa-solid fa-flag-checkered me-1.5 text-danger"></i>{{ $logItem->clock_out_at ? $logItem->clock_out_at->format('h:i:s A') : 'Active' }}
                                                         </span>
                                                     </td>
-                                                    <td class="pe-3.5 py-2 text-end fw-bold font-monospace">
-                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-0.5 rounded-pill font-monospace fw-bold" style="font-size: 0.75rem;">
+                                                    <td class="pe-4 py-3 text-end fw-bold font-monospace">
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill font-monospace fw-bold" style="font-size: 0.8rem;">
                                                             <i class="fa-solid fa-stopwatch me-1"></i>{{ $logItem->clock_in_at->diff($logItem->clock_out_at)->format('%H:%I:%S') }}
                                                         </span>
                                                     </td>
@@ -167,7 +167,7 @@
                                     </div>
                                     <div>
                                         <span class="badge bg-success text-white px-2.5 py-1 rounded-pill font-monospace fw-bold" style="font-size: 0.78rem;">
-                                            Total: {{ $mStat['hours'] }} / 160.0 Hrs
+                                            Total: {{ $mStat['hours'] >= 1.0 ? $mStat['hours'] . ' Hrs' : $mStat['formatted_total'] }} / 160.0 Hrs
                                         </span>
                                     </div>
                                 </div>

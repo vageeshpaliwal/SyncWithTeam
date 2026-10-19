@@ -1,45 +1,65 @@
-﻿const http = require('http');
-const { execFile, exec } = require('child_process');
+const http = require('http');
+const { execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
 const PORT = process.env.PORT || 49152;
 const CAPTURE_SCRIPT = path.join(__dirname, 'capture.ps1');
+const CONFIG_FILE = path.join(__dirname, 'config.json');
 
 // State
 let trackerState = {
     running: false,
-    userId: null,
+    userId: 1,
     projectId: null,
     taskId: null,
-    apiUrl: 'http://localhost/syncWithteam/public/api/v1/attendance/screenshot',
-    activeSessionUrl: 'http://localhost/syncWithteam/public/api/v1/attendance/active-session',
-    intervalSeconds: 120, // 2 minutes
+    apiUrl: 'http://127.0.0.1:8000/api/v1/attendance/screenshot',
+    activeSessionUrl: 'http://127.0.0.1:8000/api/v1/attendance/active-session',
+    minIntervalSeconds: 120, // Minimum 2 minutes gap
+    maxIntervalSeconds: 270, // Up to 4.5 minutes
     lastCapturedAt: null,
     capturesCount: 0,
     lastStatusMessage: 'Idle (Waiting for timer to start)'
 };
 
-let captureIntervalId = null;
+let captureTimeoutId = null;
 let pollIntervalId = null;
 
-// Read config.json if present
-const configPath = path.join(__dirname, 'config.json');
-if (fs.existsSync(configPath)) {
+// Save current settings to config.json (UTF-8 without BOM)
+function saveConfig() {
     try {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const configData = {
+            userId: trackerState.userId,
+            apiUrl: trackerState.apiUrl,
+            activeSessionUrl: trackerState.activeSessionUrl,
+            minIntervalSeconds: trackerState.minIntervalSeconds,
+            maxIntervalSeconds: trackerState.maxIntervalSeconds
+        };
+        fs.writeFileSync(CONFIG_FILE, JSON.stringify(configData, null, 2), 'utf8');
+        console.log('[Config] Settings saved to config.json');
+    } catch (e) {
+        console.error('[Config] Error writing config.json:', e.message);
+    }
+}
+
+// Read config.json if present
+if (fs.existsSync(CONFIG_FILE)) {
+    try {
+        const rawContent = fs.readFileSync(CONFIG_FILE, 'utf8').replace(/^\uFEFF/, '');
+        const config = JSON.parse(rawContent);
         if (config.userId) trackerState.userId = config.userId;
         if (config.apiUrl) trackerState.apiUrl = config.apiUrl;
         if (config.activeSessionUrl) trackerState.activeSessionUrl = config.activeSessionUrl;
-        if (config.intervalSeconds) trackerState.intervalSeconds = config.intervalSeconds;
-        console.log('[Config] Loaded settings from config.json');
+        if (config.minIntervalSeconds) trackerState.minIntervalSeconds = config.minIntervalSeconds;
+        if (config.maxIntervalSeconds) trackerState.maxIntervalSeconds = config.maxIntervalSeconds;
+        console.log('[Config] Loaded settings from config.json (User #' + trackerState.userId + ')');
     } catch (e) {
         console.error('[Config] Error reading config.json:', e.message);
     }
 }
 
-// Function to capture full desktop screenshot via native PowerShell .NET
+// Function to capture full desktop screenshot via native PowerShell .NET + Win32 DPI Awareness
 function captureDesktopScreen() {
     return new Promise((resolve, reject) => {
         execFile('powershell.exe', [
@@ -52,26 +72,18 @@ function captureDesktopScreen() {
             }
             const base64Data = stdout.trim();
             if (!base64Data || base64Data.length < 100) {
-                return reject(new Error('Empty screenshot output from PowerShell'));
+                return reject(new Error('Empty screenshot output from PowerShell script'));
             }
             resolve(base64Data);
         });
     });
 }
 
-// Function to upload captured screenshot to Laravel API
-function uploadScreenshot(base64Image) {
+function makeUploadRequest(targetUrlStr, payload, userId) {
     return new Promise((resolve, reject) => {
-        const targetUrl = new URL(trackerState.apiUrl);
+        const targetUrl = new URL(targetUrlStr);
         const isHttps = targetUrl.protocol === 'https:';
         const client = isHttps ? require('https') : require('http');
-
-        const payload = JSON.stringify({
-            user_id: trackerState.userId,
-            project_id: trackerState.projectId,
-            task_id: trackerState.taskId,
-            image_data: 'data:image/jpeg;base64,' + base64Image
-        });
 
         const req = client.request(targetUrl, {
             method: 'POST',
@@ -79,7 +91,7 @@ function uploadScreenshot(base64Image) {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload),
                 'Accept': 'application/json',
-                'X-User-Id': trackerState.userId || ''
+                'X-User-Id': userId || ''
             },
             timeout: 30000
         }, (res) => {
@@ -103,10 +115,33 @@ function uploadScreenshot(base64Image) {
             });
         });
 
-        req.on('error', reject);
+        req.on('error', (err) => reject(err));
         req.write(payload);
         req.end();
     });
+}
+
+// Function to upload captured screenshot to Laravel API with automatic fallback
+async function uploadScreenshot(base64Image) {
+    const payload = JSON.stringify({
+        user_id: trackerState.userId,
+        project_id: trackerState.projectId,
+        task_id: trackerState.taskId,
+        image_data: 'data:image/jpeg;base64,' + base64Image
+    });
+
+    try {
+        return await makeUploadRequest(trackerState.apiUrl, payload, trackerState.userId);
+    } catch (err) {
+        // If connection failed on default URL (e.g. port 80 or localhost), try fallback to 127.0.0.1:8000
+        if (err.code === 'ECONNREFUSED' && !trackerState.apiUrl.includes(':8000')) {
+            const fallbackUrl = 'http://127.0.0.1:8000/api/v1/attendance/screenshot';
+            console.log(`[Upload] Primary URL failed (${err.message}). Retrying fallback: ${fallbackUrl}`);
+            trackerState.apiUrl = fallbackUrl;
+            return await makeUploadRequest(fallbackUrl, payload, trackerState.userId);
+        }
+        throw err;
+    }
 }
 
 // Perform a single capture and upload cycle
@@ -121,50 +156,78 @@ async function performCaptureCycle() {
         trackerState.capturesCount++;
         trackerState.lastStatusMessage = `Last capture successful at ${timestamp} (Total: ${trackerState.capturesCount})`;
         console.log(`[${timestamp}] ✅ Screenshot recorded successfully! (Total: ${trackerState.capturesCount})`);
+        return result;
     } catch (err) {
-        trackerState.lastStatusMessage = `Capture error at ${timestamp}: ${err.message}`;
-        console.error(`[${timestamp}] ❌ Capture/Upload Error:`, err.message);
+        const errMsg = err.message || err.code || String(err);
+        trackerState.lastStatusMessage = `Capture error at ${timestamp}: ${errMsg}`;
+        console.error(`[${timestamp}] ❌ Capture/Upload Error:`, errMsg);
+        throw err;
     }
 }
 
-// Start recurring tracking
-function startTracking(options = {}) {
-    if (options.userId) trackerState.userId = options.userId;
-    if (options.projectId !== undefined) trackerState.projectId = options.projectId;
-    if (options.taskId !== undefined) trackerState.taskId = options.taskId;
-    if (options.apiUrl) trackerState.apiUrl = options.apiUrl;
-    if (options.intervalSeconds) trackerState.intervalSeconds = options.intervalSeconds;
-
-    if (trackerState.running && captureIntervalId) {
-        console.log(`[Tracker] Already running for User #${trackerState.userId}. Updated session details.`);
-        return;
+// Schedule next capture with a randomized delay (minimum 2 minutes guaranteed)
+function scheduleNextCapture() {
+    if (captureTimeoutId) {
+        clearTimeout(captureTimeoutId);
+        captureTimeoutId = null;
     }
 
+    if (!trackerState.running) return;
+
+    // Minimum gap: 120 seconds (2 minutes). Random range: 120s to 270s (2m to 4.5m)
+    const minSecs = Math.max(120, trackerState.minIntervalSeconds || 120);
+    const maxSecs = Math.max(minSecs + 60, trackerState.maxIntervalSeconds || 270);
+    const nextGapSecs = Math.floor(Math.random() * (maxSecs - minSecs + 1)) + minSecs;
+
+    console.log(`[Timer] Next random screenshot scheduled in ${nextGapSecs}s (${(nextGapSecs / 60).toFixed(1)} mins, min gap: 2m)`);
+
+    captureTimeoutId = setTimeout(async () => {
+        if (trackerState.running) {
+            try {
+                await performCaptureCycle();
+            } catch (e) {}
+            scheduleNextCapture();
+        }
+    }, nextGapSecs * 1000);
+}
+
+// Start or update tracking session
+function startTracking(options = {}) {
+    const newUserId = options.userId || options.user_id;
+    if (newUserId) trackerState.userId = newUserId;
+    if (options.projectId !== undefined) trackerState.projectId = options.projectId;
+    if (options.task_id !== undefined || options.taskId !== undefined) {
+        trackerState.taskId = options.taskId !== undefined ? options.taskId : options.task_id;
+    }
+    if (options.apiUrl) trackerState.apiUrl = options.apiUrl;
+    if (options.activeSessionUrl) trackerState.activeSessionUrl = options.activeSessionUrl;
+    if (options.minIntervalSeconds || options.interval_seconds || options.intervalSeconds) {
+        const givenMin = options.minIntervalSeconds || options.interval_seconds || options.intervalSeconds;
+        trackerState.minIntervalSeconds = Math.max(120, givenMin);
+    }
+
+    saveConfig();
+
     trackerState.running = true;
-    console.log(`\n🟢 [Tracker] Tracking STARTED for User #${trackerState.userId} (Interval: ${trackerState.intervalSeconds}s = ${trackerState.intervalSeconds/60} mins)`);
+    console.log(`\n🟢 [Tracker] Tracking STARTED/UPDATED for User #${trackerState.userId} (Random gap: >= 2 mins)`);
 
-    // Perform immediate capture after 4 seconds
-    setTimeout(() => {
+    // Perform immediate screenshot capture after 1 second, then schedule random captures
+    setTimeout(async () => {
         if (trackerState.running) {
-            performCaptureCycle();
+            try {
+                await performCaptureCycle();
+            } catch (e) {}
+            scheduleNextCapture();
         }
-    }, 4000);
-
-    // Schedule recurring interval
-    if (captureIntervalId) clearInterval(captureIntervalId);
-    captureIntervalId = setInterval(() => {
-        if (trackerState.running) {
-            performCaptureCycle();
-        }
-    }, trackerState.intervalSeconds * 1000);
+    }, 1000);
 }
 
 // Stop recurring tracking
 function stopTracking() {
     trackerState.running = false;
-    if (captureIntervalId) {
-        clearInterval(captureIntervalId);
-        captureIntervalId = null;
+    if (captureTimeoutId) {
+        clearTimeout(captureTimeoutId);
+        captureTimeoutId = null;
     }
     console.log(`\n🔴 [Tracker] Tracking STOPPED. (Total screenshots recorded: ${trackerState.capturesCount})`);
     trackerState.lastStatusMessage = 'Idle (Timer stopped)';
@@ -196,8 +259,7 @@ function pollActiveSession() {
                             startTracking({
                                 userId: data.user_id,
                                 projectId: data.project_id,
-                                taskId: data.task_id,
-                                intervalSeconds: data.interval_seconds || 120
+                                taskId: data.task_id
                             });
                         }
                     } else {
@@ -235,7 +297,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             ok: true,
-            version: '2.0.0',
+            version: '2.2.0',
             state: trackerState
         }));
         return;
@@ -249,7 +311,7 @@ const server = http.createServer((req, res) => {
                 const params = body ? JSON.parse(body) : {};
                 startTracking(params);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, message: 'Tracking started', state: trackerState }));
+                res.end(JSON.stringify({ success: true, message: 'Tracking started & immediate screenshot triggered (Random min 2m gap)', state: trackerState }));
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, message: e.message }));
@@ -266,12 +328,12 @@ const server = http.createServer((req, res) => {
     }
 
     if (parsedUrl.pathname === '/capture-now' && req.method === 'POST') {
-        performCaptureCycle().then(() => {
+        performCaptureCycle().then((result) => {
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, message: 'Capture executed', state: trackerState }));
+            res.end(JSON.stringify({ success: true, message: 'Capture executed successfully', data: result, state: trackerState }));
         }).catch(err => {
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, message: err.message }));
+            res.end(JSON.stringify({ success: false, message: err.message || err.code || String(err) }));
         });
         return;
     }
@@ -282,12 +344,12 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
     console.log('===============================================================');
-    console.log('  🚀 SyncWithTeam - Desktop Companion Tracker Agent');
+    console.log('  🚀 SyncWithTeam - Desktop Companion Tracker Agent v2.2.0');
     console.log('===============================================================');
     console.log(`  🌐 Local Bridge Running at: http://127.0.0.1:${PORT}`);
     console.log('  🔒 Capture Mode: 100% Silent (Zero Browser Popups)');
     console.log('  🖥️ Screen Scope: Entire Desktop & Laptop Windows');
-    console.log('  ⏱️ Default Interval: Every 2 minutes (120 seconds)');
+    console.log('  ⏱️ Random Interval: Randomized captures (At least 2 minutes gap)');
     console.log('===============================================================\n');
     console.log('Ready! Start timer on web dashboard or configure user_id in config.json.\n');
 

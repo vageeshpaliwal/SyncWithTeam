@@ -32,23 +32,26 @@
     @endif
 
     <!-- Top Compact Bar: Company Name & Date -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div class="d-flex align-items-center gap-2">
-            <div class="bg-white border rounded-pill px-3 py-1.5 shadow-2xs d-inline-flex align-items-center gap-2">
-                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.75rem;">
-                    <i class="fa-solid fa-building"></i>
+    <div class="page-hero d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.08em;">
+                {{ now()->format('l, M d') }}
+            </p>
+            <h3 class="fw-bold mb-1">Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ $currentUser->first_name }}</h3>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <div class="bg-white border rounded-pill px-3 py-1.5 shadow-2xs d-inline-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.75rem;">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <span class="fw-bold text-dark small">{{ $currentUser->organization?->name ?? 'SyncWithTeam Workspace' }}</span>
                 </div>
-                <span class="fw-bold text-dark small">{{ $currentUser->organization?->name ?? 'SyncWithTeam Workspace' }}</span>
             </div>
-            <span class="text-muted small font-monospace d-none d-sm-inline">
-                <i class="fa-regular fa-calendar me-1 text-secondary"></i>{{ now()->format('D, M d, Y') }}
-            </span>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 font-monospace fw-semibold shadow-sm" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createTaskModal">
                 <i class="fa-solid fa-plus me-1"></i> Add Task
             </button>
-            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 font-monospace fw-semibold" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#applyLeaveModal">
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-2 fw-semibold bg-white" data-bs-toggle="modal" data-bs-target="#applyLeaveModal">
                 <i class="fa-solid fa-plane-departure me-1"></i> Apply Leave
             </button>
         </div>
@@ -60,7 +63,7 @@
             <!-- Active Members -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('users.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Members</span>
@@ -77,7 +80,7 @@
             <!-- Total Projects -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('projects.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Projects</span>
@@ -94,7 +97,7 @@
             <!-- Pending Leaves -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('leaves.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Pending Leaves</span>
@@ -113,7 +116,7 @@
             <!-- Departments -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('departments.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Departments</span>
@@ -131,7 +134,7 @@
             <!-- Team Members -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('users.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Team Members</span>
@@ -148,7 +151,7 @@
             <!-- Projects -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('projects.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Department Projects</span>
@@ -165,7 +168,7 @@
             <!-- Pending Leaves Queue -->
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('leaves.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Leave Requests</span>
@@ -183,7 +186,7 @@
 
             <!-- My Active Tasks -->
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="text-muted small fw-bold text-uppercase d-block mb-1">My Tasks</span>
@@ -200,7 +203,7 @@
             <!-- Employee Metric Cards -->
             <!-- Leave Balance -->
             <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="text-muted small fw-bold text-uppercase d-block mb-1">Leave Balance</span>
@@ -217,7 +220,7 @@
             <!-- Assigned Projects -->
             <div class="col-xl-4 col-md-6">
                 <a href="{{ route('projects.index') }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">Active Projects</span>
@@ -233,7 +236,7 @@
 
             <!-- My Assigned Tasks -->
             <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white card-hover stat-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="text-muted small fw-bold text-uppercase d-block mb-1">My Active Tasks</span>

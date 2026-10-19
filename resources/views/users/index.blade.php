@@ -21,7 +21,7 @@
     @endif
 
     <!-- Header Section -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div class="page-hero d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h4 class="fw-bold text-dark mb-1">Users & Team Directory</h4>
             <p class="text-muted small mb-0">

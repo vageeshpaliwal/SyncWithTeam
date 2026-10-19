@@ -168,9 +168,9 @@ class AttendanceScreenshotController extends Controller
     }
 
     /**
-     * Prune screenshots older than 30 days (1 month)
+     * Prune screenshots older than 7 days (previous week auto-delete)
      */
-    protected function pruneOldScreenshots(int $days = 30): int
+    protected function pruneOldScreenshots(int $days = 7): int
     {
         $cutoff = now()->subDays($days);
         $oldScreenshots = AttendanceScreenshot::where('captured_at', '<', $cutoff)->get();

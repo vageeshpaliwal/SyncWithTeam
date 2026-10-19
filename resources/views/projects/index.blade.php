@@ -13,7 +13,7 @@
         </div>
     @endif
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div class="page-hero d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h4 class="fw-bold text-dark mb-1">Projects & Initiatives</h4>
             <p class="text-muted small mb-0">Manage organization projects, track progress, and assign team members.</p>

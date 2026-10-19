@@ -263,12 +263,17 @@ class AttendanceController extends Controller
                     $empDates[$d] = true;
                 }
 
-                $empHours = round($empSecs / 3600, 1);
+                $eHrs = floor($empSecs / 3600);
+                $eMins = floor(($empSecs % 3600) / 60);
+                $eSecsRem = $empSecs % 60;
+                $eFormatted = sprintf('%02d:%02d:%02d', $eHrs, $eMins, $eSecsRem);
+                $empHours = round($empSecs / 3600, 2);
                 $percent = min(100, round(($empHours / 40.0) * 100));
 
                 $teamWeeklyStats[] = [
                     'user' => $emp,
                     'hours' => $empHours,
+                    'formatted_total' => $eFormatted,
                     'quota' => 40.0,
                     'percent' => $percent,
                     'logs_count' => $empLogs->count(),
@@ -709,6 +714,12 @@ class AttendanceController extends Controller
             abort(403);
         }
 
+        // Restrict edits to current week logs only
+        $logDate = $attendance->clock_in_at ?? ($attendance->date ? \Carbon\Carbon::parse($attendance->date) : null);
+        if ($logDate && !$logDate->between(now()->startOfWeek(), now()->endOfWeek())) {
+            return redirect()->back()->with('error', 'Only time entries from the current week can be edited.');
+        }
+
         $request->validate([
             'project_id' => 'nullable|exists:projects,id',
             'task_title' => 'nullable|string|max:255',
@@ -812,13 +823,18 @@ class AttendanceController extends Controller
                 $d = $log->clock_in_at ? $log->clock_in_at->toDateString() : $log->date->toDateString();
                 $wDates[$d] = true;
             }
-            $wHours = round($wSecs / 3600, 1);
+            $wHrs = floor($wSecs / 3600);
+            $wMins = floor(($wSecs % 3600) / 60);
+            $wSecsRem = $wSecs % 60;
+            $wFormatted = sprintf('%02d:%02d:%02d', $wHrs, $wMins, $wSecsRem);
+            $wHours = round($wSecs / 3600, 2);
             $wPercent = min(100, round(($wHours / $weeklyQuotaHours) * 100));
 
             $weeklyStats[] = [
                 'sort_key' => $sortKey,
                 'label' => 'Week (' . $label . ')',
                 'hours' => $wHours,
+                'formatted_total' => $wFormatted,
                 'quota' => $weeklyQuotaHours,
                 'percent' => $wPercent,
                 'logs_count' => $wLogs->count(),
@@ -844,13 +860,18 @@ class AttendanceController extends Controller
                 $d = $log->clock_in_at ? $log->clock_in_at->toDateString() : $log->date->toDateString();
                 $uniqueDates[$d] = true;
             }
-            $mHours = round($mSecs / 3600, 1);
+            $mHrs = floor($mSecs / 3600);
+            $mMins = floor(($mSecs % 3600) / 60);
+            $mSecsRem = $mSecs % 60;
+            $mFormatted = sprintf('%02d:%02d:%02d', $mHrs, $mMins, $mSecsRem);
+            $mHours = round($mSecs / 3600, 2);
             $monthlyQuota = 160.0; // standard 4 weeks = 160 hours target
             $mPercent = min(100, round(($mHours / $monthlyQuota) * 100));
 
             $monthlyStats[] = [
                 'month' => $monthLabel,
                 'hours' => $mHours,
+                'formatted_total' => $mFormatted,
                 'quota' => $monthlyQuota,
                 'percent' => $mPercent,
                 'logs_count' => $mLogs->count(),
@@ -873,7 +894,11 @@ class AttendanceController extends Controller
                 $cwSecs += $l->clock_in_at->diffInSeconds($l->clock_out_at);
             }
         }
-        $currentWeekHours = round($cwSecs / 3600, 1);
+        $cwHrs = floor($cwSecs / 3600);
+        $cwMins = floor(($cwSecs % 3600) / 60);
+        $cwSecsRem = $cwSecs % 60;
+        $currentWeekFormatted = sprintf('%02d:%02d:%02d', $cwHrs, $cwMins, $cwSecsRem);
+        $currentWeekHours = round($cwSecs / 3600, 2);
         $currentWeekPercent = min(100, round(($currentWeekHours / $weeklyQuotaHours) * 100));
 
         // Screenshots Day-Wise (Current Week Mon-Sun) for this user
@@ -925,6 +950,7 @@ class AttendanceController extends Controller
             'weeklyStats',
             'monthlyStats',
             'currentWeekHours',
+            'currentWeekFormatted',
             'currentWeekPercent',
             'weeklyQuotaHours',
             'currentWeekDays',

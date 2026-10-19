@@ -69,9 +69,14 @@
 
 /* Navbar in Dark Mode */
 [data-bs-theme="dark"] .navbar {
-    background: rgba(15, 23, 42, 0.95) !important;
+    background: rgba(15, 23, 42, 0.92) !important;
     border-color: #1F2937 !important;
     box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .page-hero {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(14, 165, 233, 0.08));
+    border-color: #1F2937;
 }
 
 /* Sidebar in Dark Mode */

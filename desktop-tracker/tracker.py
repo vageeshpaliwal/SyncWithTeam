@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import os
 import json
 import time
@@ -30,6 +30,20 @@ tracker_state = {
 
 capture_timer = None
 
+def save_config():
+    try:
+        cfg_data = {
+            "userId": tracker_state["user_id"],
+            "apiUrl": tracker_state["api_url"],
+            "activeSessionUrl": tracker_state["active_session_url"],
+            "intervalSeconds": tracker_state["interval_seconds"]
+        }
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(cfg_data, f, indent=2)
+        print("[Config] Settings saved to config.json")
+    except Exception as e:
+        print(f"[Config] Error writing config: {e}")
+
 if os.path.exists(CONFIG_FILE):
     try:
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -38,7 +52,7 @@ if os.path.exists(CONFIG_FILE):
             if "apiUrl" in cfg: tracker_state["api_url"] = cfg["apiUrl"]
             if "activeSessionUrl" in cfg: tracker_state["active_session_url"] = cfg["activeSessionUrl"]
             if "intervalSeconds" in cfg: tracker_state["interval_seconds"] = cfg["intervalSeconds"]
-            print("[Config] Loaded settings from config.json")
+            print(f"[Config] Loaded settings from config.json (User #{tracker_state['user_id']})")
     except Exception as e:
         print(f"[Config] Error: {e}")
 
@@ -73,25 +87,27 @@ def perform_capture_cycle():
         print(f"[{t_str}] 📸 Capturing full laptop screen...")
         b64 = capture_desktop_screen()
         print(f"[{t_str}] ⬆️ Uploading to SyncWithTeam backend (User #{tracker_state['user_id']})...")
-        upload_screenshot(b64)
+        res = upload_screenshot(b64)
         tracker_state["last_captured_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
         tracker_state["captures_count"] += 1
         tracker_state["last_status_message"] = f"Last capture successful at {t_str} (Total: {tracker_state['captures_count']})"
         print(f"[{t_str}] ✅ Screenshot recorded successfully! (Total: {tracker_state['captures_count']})")
+        return res
     except Exception as e:
         tracker_state["last_status_message"] = f"Capture error at {t_str}: {e}"
         print(f"[{t_str}] ❌ Capture/Upload Error: {e}")
+        raise e
 
 def capture_loop():
     while tracker_state["running"]:
-        perform_capture_cycle()
         for _ in range(tracker_state["interval_seconds"]):
             if not tracker_state["running"]:
                 break
             time.sleep(1)
+        if tracker_state["running"]:
+            perform_capture_cycle()
 
 def start_tracking(options=None):
-    global capture_timer
     if options:
         if "userId" in options or "user_id" in options:
             tracker_state["user_id"] = options.get("userId") or options.get("user_id")
@@ -99,15 +115,21 @@ def start_tracking(options=None):
             tracker_state["project_id"] = options.get("projectId") or options.get("project_id")
         if "taskId" in options or "task_id" in options:
             tracker_state["task_id"] = options.get("taskId") or options.get("task_id")
+        if "apiUrl" in options:
+            tracker_state["api_url"] = options.get("apiUrl")
+        if "activeSessionUrl" in options:
+            tracker_state["active_session_url"] = options.get("activeSessionUrl")
         if "intervalSeconds" in options or "interval_seconds" in options:
             tracker_state["interval_seconds"] = int(options.get("intervalSeconds") or options.get("interval_seconds"))
 
-    if tracker_state["running"]:
-        print(f"[Tracker] Already running for User #{tracker_state['user_id']}.")
-        return
+    save_config()
 
     tracker_state["running"] = True
     print(f"\n🟢 [Tracker] Tracking STARTED for User #{tracker_state['user_id']} (Interval: {tracker_state['interval_seconds']}s)")
+    
+    # Trigger immediate capture in a separate thread
+    threading.Thread(target=perform_capture_cycle, daemon=True).start()
+
     th = threading.Thread(target=capture_loop, daemon=True)
     th.start()
 
@@ -164,12 +186,19 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"success": True, "message": "Tracking stopped", "state": tracker_state}).encode("utf-8"))
         elif parsed.path == "/capture-now":
-            perform_capture_cycle()
-            self.send_response(200)
-            self._send_cors_headers()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": True, "message": "Captured", "state": tracker_state}).encode("utf-8"))
+            try:
+                res = perform_capture_cycle()
+                self.send_response(200)
+                self._send_cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "message": "Captured", "data": res, "state": tracker_state}).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self._send_cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "message": str(e)}).encode("utf-8"))
         else:
             self.send_response(404)
             self._send_cors_headers()

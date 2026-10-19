@@ -7,20 +7,41 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
 class PruneOldScreenshots extends Command
-{"ˆ›ÝXÝY	ÚYÛ˜]\™HH	ÜØÜ™Y[œÚÝÎœ[™HÙ^\ÏLÌˆ[X™\ˆÙˆ^\ÈÈ™]Z[ˆØÜ™Y[œÚÝßIÎÂ‚ˆ›ÝXÝY	\ØÜš\[ÛˆH	Ô[™H][™[˜ÙH˜XÚÙ\ˆØÜ™Y[œÚÝÈÛ\ˆ[ˆÌ^\È
-ÜˆÜXÚYšYY^\ÊIÎÂ‚ˆX›XÈ[˜Ý[Ûˆ[™J
-Nˆ[ˆÂˆ	^\ÈH
-[
-H	\ËO˜\™Ý[Y[
-	Ù^\ÉÊNÂˆ	Ý]Ù™ˆH›ÝÊ
-KOœÝX‘^\Ê	^\ÊNÂ‚ˆ	\ËOš[™›Ê”[š[™ÈØÜ™Y[œÚÝÈØ\\™Y™Y›Ü™NˆÉÝ]Ù™‹OÑ]U[YTÝš[™Ê
-_HŠNÂ‚ˆ	ÛØÜ™Y[œÚÝÈH][™[˜ÙTØÜ™Y[œÚÝŽÚ\™J	ØØ\\™YØ]	Ë	Ï	Ë	Ý]Ù™ŠKO™Ù]
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'screenshots:prune {--days=7 : Number of days to keep screenshots}';
 
-NÂˆ	[]YHÂ‚ˆ›Ü™XXÚ
-	ÛØÜ™Y[œÚÝÈ\È	ÊHÂˆYˆ
-	ËOœØÜ™Y[œÚÝÜ]	‰ˆÝÜ˜YÙNŽ™\ÚÊ	ÜX›XÉÊKO™^\ÝÊ	ËOœØÜ™Y[œÚÝÜ]
-JHÂˆÝÜ˜YÙNŽ™\ÚÊ	ÜX›XÉÊKO™[]J	ËOœØÜ™Y[œÚÝÜ]
-NÂˆBˆ	ËO™[]J
-NÂˆ	[]Y
-ÊÎÂˆB‚ˆ	\ËOš[™›ÊÛÛ\]Yˆ[]YÉ[]YHÛØÜ™Y[œÚÝ
-ÊKˆŠNÂˆ™]\›ˆÛÛ[X[™Ž”ÕPÐÑTÔÎÂˆBŸB
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Automatically delete screenshots older than 7 days (previous week)';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        $days = (int) $this->option('days');
+        $cutoff = now()->subDays($days);
+
+        $oldScreenshots = AttendanceScreenshot::where('captured_at', '<', $cutoff)->get();
+        $count = 0;
+
+        foreach ($oldScreenshots as $screenshot) {
+            if ($screenshot->screenshot_path && Storage::disk('public')->exists($screenshot->screenshot_path)) {
+                Storage::disk('public')->delete($screenshot->screenshot_path);
+            }
+            $screenshot->delete();
+            $count++;
+        }
+
+        $this->info("Successfully pruned {$count} screenshot(s) older than {$days} days.");
+        return 0;
+    }
+}

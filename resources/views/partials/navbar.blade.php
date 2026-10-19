@@ -36,6 +36,10 @@
 
     <div class="d-flex align-items-center">
 
+        <button type="button" class="btn btn-light d-lg-none me-2 rounded-circle border-0 shadow-2xs" data-sidebar-toggle aria-label="Open menu" style="width: 40px; height: 40px;">
+            <i class="fa-solid fa-bars text-secondary"></i>
+        </button>
+
         <h4 class="m-0 fw-bold text-dark fs-5">
             @yield('title', 'Dashboard')
         </h4>

@@ -1,10 +1,10 @@
-<aside class="sidebar">
+<aside class="sidebar" id="app-sidebar">
 
     <div class="brand">
         <div class="brand-icon">S</div>
         <div>
             <h3 class="brand-title">SyncWithTeam</h3>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px;">PRO CRM</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; padding: 3px 8px;">WORKSPACE</span>
         </div>
     </div>
 
@@ -15,8 +15,9 @@
         $isHrOrAdminOrOwner = in_array($roleCode, ['admin', 'owner', 'hr']);
     @endphp
 
+    <div class="sidebar-nav">
+    <div class="sidebar-section">Overview</div>
     <ul>
-
         <li>
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="fa-solid fa-chart-pie"></i>
@@ -24,6 +25,32 @@
             </a>
         </li>
 
+        @if(session()->has('user_id') && $currentUserService->hasPermission('projects.view'))
+        <li>
+            <a href="{{ route('projects.index') }}" class="{{ request()->routeIs('projects.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-diagram-project"></i>
+                <span>Projects</span>
+            </a>
+        </li>
+        @endif
+
+        <li>
+            <a href="{{ route('chat.index') }}" class="{{ request()->routeIs('chat.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-comments"></i>
+                <span>Team Chat</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('announcements.index') }}" class="{{ request()->routeIs('announcements.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Announcements</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-section">People</div>
+    <ul>
         @if(session()->has('user_id') && $isHrOrAdminOrOwner && $currentUserService->hasPermission('users.view'))
         <li>
             <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
@@ -57,19 +84,12 @@
             </a>
         </li>
         @endif
+    </ul>
 
-        <!-- Projects section visible if permission exists -->
-        @if(session()->has('user_id') && $currentUserService->hasPermission('projects.view'))
-        <li>
-            <a href="{{ route('projects.index') }}" class="{{ request()->routeIs('projects.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-diagram-project"></i>
-                <span>Projects</span>
-            </a>
-        </li>
-        @endif
-
+    <div class="sidebar-section">Time & pay</div>
+    <ul>
         @if(session()->has('user_id') && (
-            $currentUserService->hasPermission('attendance.view') || 
+            $currentUserService->hasPermission('attendance.view') ||
             $currentUserService->hasPermission('attendance.manage')
         ))
         <li>
@@ -81,8 +101,8 @@
         @endif
 
         @if(session()->has('user_id') && (
-            $currentUserService->hasPermission('leaves.request') || 
-            $currentUserService->hasPermission('leaves.manage') || 
+            $currentUserService->hasPermission('leaves.request') ||
+            $currentUserService->hasPermission('leaves.manage') ||
             $currentUserService->hasPermission('leaves.approve')
         ))
         <li>
@@ -112,27 +132,15 @@
         @endif
 
         <li>
-            <a href="{{ route('chat.index') }}" class="{{ request()->routeIs('chat.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-comments"></i>
-                <span>Team Chat</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('announcements.index') }}" class="{{ request()->routeIs('announcements.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-bullhorn"></i>
-                <span>Announcements</span>
-            </a>
-        </li>
-
-
-        <li>
             <a href="{{ route('holidays.index') }}" class="{{ request()->routeIs('holidays.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-calendar-day"></i>
                 <span>Holidays</span>
             </a>
         </li>
+    </ul>
 
+    <div class="sidebar-section">Account</div>
+    <ul>
         @if(session()->has('user_id') && $currentUserService->hasPermission('settings.view'))
         <li>
             <a href="{{ route('settings.index') }}" class="{{ request()->routeIs('settings.*') ? 'active' : '' }}">
@@ -157,7 +165,16 @@
                 <span>My Profile</span>
             </a>
         </li>
-
     </ul>
+    </div>
+
+    @if($currentUser)
+    <div class="sidebar-footer">
+        <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
+            <i class="fa-solid fa-circle-user"></i>
+            <span class="text-truncate">{{ $currentUser->full_name }}</span>
+        </a>
+    </div>
+    @endif
 
 </aside>

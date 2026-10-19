@@ -53,6 +53,8 @@
 
 <div class="dashboard-wrapper">
 
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     @include('partials.sidebar')
 
     <div class="dashboard-content">
@@ -85,6 +87,27 @@
                 });
         });
     }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('app-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const toggles = document.querySelectorAll('[data-sidebar-toggle]');
+
+        function closeSidebar() {
+            sidebar?.classList.remove('show');
+            overlay?.classList.remove('show');
+        }
+
+        function toggleSidebar() {
+            sidebar?.classList.toggle('show');
+            overlay?.classList.toggle('show');
+        }
+
+        toggles.forEach((btn) => btn.addEventListener('click', toggleSidebar));
+        overlay?.addEventListener('click', closeSidebar);
+    });
 </script>
 
 @stack('scripts')

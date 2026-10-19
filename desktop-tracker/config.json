@@ -1,6 +1,7 @@
-﻿{
-  "userId": 1,
-  "apiUrl": "http://localhost/syncWithteam/public/api/v1/attendance/screenshot",
-  "activeSessionUrl": "http://localhost/syncWithteam/public/api/v1/attendance/active-session",
-  "intervalSeconds": 120
+{
+  "userId": 4,
+  "apiUrl": "http://127.0.0.1:8000/api/v1/attendance/screenshot",
+  "activeSessionUrl": "http://127.0.0.1:8000/api/v1/attendance/active-session",
+  "minIntervalSeconds": 120,
+  "maxIntervalSeconds": 270
 }

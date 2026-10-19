@@ -11,53 +11,67 @@
 
 @push('styles')
 <style>
-    .week-card-header {
-        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-        border: 1px solid #E2E8F0;
-        transition: all 0.2s ease;
+    .time-tracker-card {
+        border: 1px solid var(--bs-border-color, #E2E8F0);
+        border-radius: 12px;
+        background: var(--bs-card-bg, #FFFFFF);
+        box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
     }
-    .week-card-header.is-current {
-        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-        border: 1px solid #BFDBFE;
+    .tracker-pill-input {
+        background-color: var(--bs-tertiary-bg, #F8FAFC);
+        border: 1px solid var(--bs-border-color, #E2E8F0);
+        border-radius: 50rem;
+        transition: all 0.15s ease-in-out;
+        overflow: visible !important;
+        position: relative;
     }
-    .hover-lift {
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    .tracker-pill-input:focus-within {
+        background-color: var(--bs-body-bg, #FFFFFF);
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
     }
-    .hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+    .tracker-pill-input .form-control,
+    .tracker-pill-input .form-select,
+    .tracker-pill-input .input-group-text {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        border-radius: 0 !important;
     }
-    .glass-badge {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+    .tracker-pill-input .form-control:focus,
+    .tracker-pill-input .form-select:focus {
+        border: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
-    .day-selector-btn {
-        transition: all 0.15s ease;
+    .timesheet-week-header {
+        background: var(--bs-body-bg, #FFFFFF);
+        border: 1px solid var(--bs-border-color, #E2E8F0);
+        border-left: 4px solid #3B82F6 !important;
+        border-radius: 8px;
+        padding: 0.75rem 1.25rem !important;
     }
-    .day-selector-btn:hover:not(.active-day-btn) {
-        background-color: #F1F5F9 !important;
-        transform: translateY(-1px);
+    .timesheet-table th {
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: var(--bs-secondary-color, #64748B);
+        border-bottom: 2px solid var(--bs-border-color-subtle, #E2E8F0);
+        background-color: var(--bs-tertiary-bg, #F8FAFC);
     }
-    .day-selector-btn.active-day-btn {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
-        color: #FFFFFF !important;
-        border-color: #1D4ED8 !important;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2) !important;
+    .timesheet-table td {
+        vertical-align: middle;
+        border-bottom: 1px solid var(--bs-border-color-subtle, #F1F5F9);
     }
-    .live-pulse {
-        animation: pulseAnimation 2s infinite;
+    .timesheet-table tbody tr:hover {
+        background-color: var(--bs-tertiary-bg, #F8FAFC) !important;
     }
-    @keyframes pulseAnimation {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.85); }
+    .table-responsive {
+        overflow: visible !important;
     }
-    .log-item-row {
-        padding: 0.55rem 0.85rem;
-        transition: background-color 0.12s ease;
-    }
-    .log-item-row:hover {
-        background-color: #F8FAFC !important;
+    .timesheet-table .dropdown-menu {
+        z-index: 9999 !important;
     }
     .action-btn-circle {
         width: 30px;
@@ -66,35 +80,44 @@
         align-items: center;
         justify-content: center;
         padding: 0;
-        font-size: 0.75rem;
+        border-radius: 50%;
+        transition: all 0.15s ease;
+    }
+    .action-btn-circle:hover {
+        transform: scale(1.08);
+        background-color: #E2E8F0;
+    }
+    .live-pulse {
+        animation: pulseAnimation 2s infinite;
+    }
+    @keyframes pulseAnimation {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
     }
 </style>
 @endpush
 
 <div class="container-fluid px-0">
 
-    <!-- Time Tracker Bar (Condensed Pro SaaS Aesthetic) -->
-    <div class="card border-0 shadow-sm mb-3 bg-white rounded-3 overflow-hidden border">
-        <div class="card-body py-2.5 px-3">
+    <!-- Time Tracker Bar (Clean SaaS Aesthetic) -->
+    <div class="card time-tracker-card mb-4 border-0">
+        <div class="card-body py-3 px-4">
             <div id="tracker-container">
                 @if($activeAttendance)
                     <!-- Active State Form -->
-                    <form id="active-tracker-form" onsubmit="handleTrackerSubmit(event, 'switch')" class="d-flex align-items-center justify-content-between flex-wrap gap-2.5">
+                    <form id="active-tracker-form" onsubmit="handleTrackerSubmit(event, 'switch')" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                         @csrf
-                        <div class="d-flex align-items-center flex-grow-1 gap-2.5 min-w-0" style="min-width: 260px;">
-                            <div class="input-group bg-light rounded-pill px-2.5 py-1 border shadow-2xs flex-grow-1">
-                                <span class="input-group-text bg-transparent border-0 text-primary ps-1 pe-2">
-                                    <i class="fa-solid fa-bolt" style="font-size: 0.82rem;"></i>
+                        <div class="d-flex align-items-center flex-grow-1 gap-3 min-w-0" style="min-width: 280px;">
+                            <div class="input-group tracker-pill-input px-3 py-1 flex-grow-1">
+                                <span class="input-group-text bg-transparent border-0 text-primary ps-0 pe-2">
+                                    <i class="fa-solid fa-bolt fs-6"></i>
                                 </span>
-                                <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-0.5 fw-semibold text-dark" style="font-size: 0.875rem;" 
+                                <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-body" style="font-size: 0.9rem;" 
                                        placeholder="What are you working on?"
                                        value="{{ $activeAttendance->task?->title }}">
                             </div>
-                            <div class="input-group bg-light rounded-pill px-2.5 py-1 border shadow-2xs flex-shrink-0" style="width: 200px;">
-                                <span class="input-group-text bg-transparent border-0 text-warning ps-1 pe-2">
-                                    <i class="fa-solid fa-folder-closed" style="font-size: 0.82rem;"></i>
-                                </span>
-                                <select id="project_id_select" name="project_id" class="form-select border-0 bg-transparent shadow-none fw-semibold text-dark py-0.5" style="font-size: 0.84rem;" onchange="handleProjectChange(this)">
+                            <div class="input-group tracker-pill-input px-3 py-1 flex-shrink-0 position-relative dropdown" style="width: 200px;">
+                                <select id="project_id_select" name="project_id" class="d-none" onchange="handleProjectChange(this)">
                                     <option value="">+ Project</option>
                                     @foreach($projects as $project)
                                         <option value="{{ $project->id }}" {{ $activeAttendance->project_id === $project->id ? 'selected' : '' }}>
@@ -102,17 +125,64 @@
                                         </option>
                                     @endforeach
                                 </select>
+
+                                <button type="button" 
+                                        class="btn btn-transparent border-0 shadow-none fw-semibold text-body py-1 px-0 text-start text-truncate flex-grow-1 d-flex align-items-center justify-content-between" 
+                                        id="custom_project_btn"
+                                        data-bs-toggle="dropdown" 
+                                        data-bs-display="static" 
+                                        aria-expanded="false" 
+                                        style="font-size: 0.85rem;">
+                                    <span class="text-truncate me-1" id="custom_project_label">
+                                        {{ $activeAttendance->project?->name ?? '+ Project' }}
+                                    </span>
+                                    <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 p-1 mt-1 font-sans" style="min-width: 220px; z-index: 9999 !important; border-color: var(--bs-border-color) !important;" id="custom_project_menu">
+                                    <li class="px-2 py-1 mb-1" onclick="event.stopPropagation();">
+                                        <div class="input-group input-group-sm bg-body-tertiary rounded-2 border px-2 py-1">
+                                            <span class="input-group-text bg-transparent border-0 text-muted p-0 me-1.5" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                            </span>
+                                            <input type="text" class="form-control bg-transparent border-0 shadow-none p-0 small text-body" placeholder="Search project..." onkeyup="filterProjectDropdown(this)" onclick="event.stopPropagation();">
+                                        </div>
+                                    </li>
+                                    <li onclick="event.stopPropagation();"><hr class="dropdown-divider my-1 opacity-10"></li>
+                                    <div class="project-items-list" style="max-height: 200px; overflow-y: auto;">
+                                        <li>
+                                            <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body {{ !$activeAttendance?->project_id ? 'active bg-primary text-white' : '' }}" 
+                                                    type="button" 
+                                                    onclick="selectProjectCustom('', '+ Project', this)">
+                                                <span>+ Project</span>
+                                                <i class="fa-solid fa-check small check-mark {{ !$activeAttendance?->project_id ? '' : 'd-none' }}"></i>
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider my-1 opacity-10"></li>
+                                        @foreach($projects as $project)
+                                            @php $isSel = ($activeAttendance && $activeAttendance->project_id === $project->id); @endphp
+                                            <li>
+                                                <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body {{ $isSel ? 'active bg-primary text-white' : '' }}" 
+                                                        type="button" 
+                                                        onclick="selectProjectCustom('{{ $project->id }}', '{{ addslashes($project->name) }}', this)">
+                                                    <span class="text-truncate me-2">{{ $project->name }}</span>
+                                                    <i class="fa-solid fa-check small check-mark {{ $isSel ? '' : 'd-none' }}"></i>
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </div>
+                                </ul>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2.5 ms-auto">
-                            <div class="d-flex align-items-center gap-2 text-success px-3 py-1 rounded-pill border border-success-subtle shadow-2xs" style="background-color: #ECFDF5;">
-                                <span class="spinner-grow spinner-grow-sm text-success live-pulse" style="width: 7px; height: 7px;"></span>
+                        <div class="d-flex align-items-center gap-3 ms-auto">
+                            <div class="d-flex align-items-center gap-2 text-success rounded-pill border border-success-subtle shadow-sm" style="background-color: #ECFDF5; padding: 0.45rem 1.1rem !important;">
+                                <span class="spinner-grow spinner-grow-sm text-success live-pulse flex-shrink-0" style="width: 8px; height: 8px;"></span>
                                 <div id="logs-running-timer" class="fs-5 fw-bold font-monospace text-success lh-1" data-start="{{ $activeAttendance->clock_in_at->toIso8601String() }}">
                                     00:00:00
                                 </div>
                             </div>
-                            <button type="button" onclick="handleStopTimer()" class="btn btn-danger btn-sm px-3.5 py-1.5 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-1.5" style="font-size: 0.8rem; letter-spacing: 0.3px;">
+                            <button type="button" onclick="handleStopTimer()" class="btn btn-danger btn-sm px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.8rem; letter-spacing: 0.4px;">
                                 <i class="fa-solid fa-square" style="font-size: 0.75rem;"></i> Stop
                             </button>
                         </div>
@@ -128,42 +198,39 @@
                         }
                     @endphp
                     <!-- On Approved Leave State -->
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2.5 py-0.5">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 py-1">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
                                 <i class="fa-solid fa-umbrella-beach fs-6 text-warning"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold text-dark mb-0 fs-6">Approved Leave Active ({{ $leaveLabel }})</h6>
-                                <p class="text-muted small mb-0 font-monospace" style="font-size: 0.75rem;">
+                                <h6 class="fw-bold text-body mb-0.5 fs-6">Approved Leave Active ({{ $leaveLabel }})</h6>
+                                <p class="text-secondary small mb-0 font-monospace" style="font-size: 0.78rem;">
                                     Period: {{ $activeLeave->start_date->format('d M Y') }} &ndash; {{ $activeLeave->end_date->format('d M Y') }} &bull; 
                                     <span class="text-danger fw-semibold">{{ $leaveNote }}</span>
                                 </p>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.78rem;">
                                 <i class="fa-solid fa-ban me-1 text-danger"></i> Tracking Disabled
                             </span>
                         </div>
                     </div>
                 @else
                     <!-- Idle State Form -->
-                    <form id="idle-tracker-form" onsubmit="handleTrackerSubmit(event, 'start')" class="d-flex align-items-center justify-content-between flex-wrap gap-2.5">
+                    <form id="idle-tracker-form" onsubmit="handleTrackerSubmit(event, 'start')" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                         @csrf
-                        <div class="d-flex align-items-center flex-grow-1 gap-2.5 min-w-0" style="min-width: 260px;">
-                            <div class="input-group bg-light rounded-pill px-2.5 py-1 border shadow-2xs flex-grow-1">
-                                <span class="input-group-text bg-transparent border-0 text-muted ps-1 pe-2">
-                                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.82rem;"></i>
+                        <div class="d-flex align-items-center flex-grow-1 gap-3 min-w-0" style="min-width: 280px;">
+                            <div class="input-group tracker-pill-input px-3 py-1 flex-grow-1">
+                                <span class="input-group-text bg-transparent border-0 text-muted ps-0 pe-2">
+                                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.85rem;"></i>
                                 </span>
-                                <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-0.5 fw-semibold text-dark" style="font-size: 0.875rem;" 
+                                <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-body" style="font-size: 0.9rem;" 
                                        placeholder="What are you working on?">
                             </div>
-                            <div class="input-group bg-light rounded-pill px-2.5 py-1 border shadow-2xs flex-shrink-0" style="width: 200px;">
-                                <span class="input-group-text bg-transparent border-0 text-warning ps-1 pe-2">
-                                    <i class="fa-solid fa-folder-closed" style="font-size: 0.82rem;"></i>
-                                </span>
-                                <select id="project_id_select" name="project_id" class="form-select border-0 bg-transparent shadow-none fw-semibold text-dark py-0.5" style="font-size: 0.84rem;">
+                            <div class="input-group tracker-pill-input px-3 py-1 flex-shrink-0 position-relative dropdown" style="width: 200px;">
+                                <select id="project_id_select" name="project_id" class="d-none">
                                     <option value="">+ Project</option>
                                     @foreach($projects as $project)
                                         <option value="{{ $project->id }}">
@@ -171,15 +238,59 @@
                                         </option>
                                     @endforeach
                                 </select>
+
+                                <button type="button" 
+                                        class="btn btn-transparent border-0 shadow-none fw-semibold text-body py-1 px-0 text-start text-truncate flex-grow-1 d-flex align-items-center justify-content-between" 
+                                        id="custom_project_btn"
+                                        data-bs-toggle="dropdown" 
+                                        data-bs-display="static" 
+                                        aria-expanded="false" 
+                                        style="font-size: 0.85rem;">
+                                    <span class="text-truncate me-1" id="custom_project_label">+ Project</span>
+                                    <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 p-1 mt-1 font-sans" style="min-width: 220px; z-index: 9999 !important; border-color: var(--bs-border-color) !important;" id="custom_project_menu">
+                                    <li class="px-2 py-1 mb-1" onclick="event.stopPropagation();">
+                                        <div class="input-group input-group-sm bg-body-tertiary rounded-2 border px-2 py-1">
+                                            <span class="input-group-text bg-transparent border-0 text-muted p-0 me-1.5" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                            </span>
+                                            <input type="text" class="form-control bg-transparent border-0 shadow-none p-0 small text-body" placeholder="Search project..." onkeyup="filterProjectDropdown(this)" onclick="event.stopPropagation();">
+                                        </div>
+                                    </li>
+                                    <li onclick="event.stopPropagation();"><hr class="dropdown-divider my-1 opacity-10"></li>
+                                    <div class="project-items-list" style="max-height: 200px; overflow-y: auto;">
+                                        <li>
+                                            <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body active bg-primary text-white" 
+                                                    type="button" 
+                                                    onclick="selectProjectCustom('', '+ Project', this)">
+                                                <span>+ Project</span>
+                                                <i class="fa-solid fa-check small check-mark"></i>
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider my-1 opacity-10"></li>
+                                        @foreach($projects as $project)
+                                            <li>
+                                                <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body" 
+                                                        type="button" 
+                                                        onclick="selectProjectCustom('{{ $project->id }}', '{{ addslashes($project->name) }}', this)">
+                                                    <span class="text-truncate me-2">{{ $project->name }}</span>
+                                                    <i class="fa-solid fa-check small check-mark d-none"></i>
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </div>
+                                </ul>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2.5 ms-auto">
+                        <div class="d-flex align-items-center gap-3 ms-auto">
                             <div class="fs-5 fw-bold text-secondary opacity-75 font-monospace pe-2 lh-1" style="letter-spacing: 0.3px;">
                                 00:00:00
                             </div>
-                            <button type="submit" class="btn btn-primary btn-sm px-3.5 py-1.5 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-1.5" style="font-size: 0.8rem; letter-spacing: 0.3px;">
-                                <i class="fa-solid fa-play" style="font-size: 0.72rem;"></i> Start
+                            <button type="submit" class="btn btn-primary btn-sm px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.8rem; letter-spacing: 0.4px;">
+                                <i class="fa-solid fa-play" style="font-size: 0.75rem;"></i> Start
                             </button>
                         </div>
                     </form>
@@ -189,8 +300,8 @@
     </div>
 
     <!-- Logs Container -->
-    <div class="card border-0 shadow-sm bg-white rounded-3 mb-3 border">
-        <div class="card-header bg-white py-2 px-3.5 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2.5">
+    <div class="card border-0 shadow-sm bg-body rounded-4 mb-3.5 overflow-hidden">
+        <div class="card-header bg-body py-2.5 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2.5">
             @php
                 $isTeamFiltered = request()->has('employee_id') || request()->has('log_date');
                 $wSecs = $myPersonalStats['weekly_seconds'] ?? 0;
@@ -202,50 +313,46 @@
                 $tMins = floor(($tSecs % 3600) / 60);
             @endphp
             
-            <ul class="nav nav-pills card-header-pills gap-1.5" id="timeLogsTabs" role="tablist">
+            <ul class="nav nav-pills card-header-pills gap-2" id="timeLogsTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link {{ !$isTeamFiltered ? 'active' : '' }} fw-semibold d-flex align-items-center gap-1.5 rounded-pill px-3 py-1 small" id="my-logs-tab" data-bs-toggle="tab" data-bs-target="#my-logs" type="button" role="tab">
+                    <button class="nav-link {{ !$isTeamFiltered ? 'active' : '' }} fw-semibold d-flex align-items-center gap-2 rounded-pill px-3.5 py-1.5 small" id="my-logs-tab" data-bs-toggle="tab" data-bs-target="#my-logs" type="button" role="tab">
                         <i class="fa-solid fa-user-clock"></i> My Time Logs
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link {{ request('tab') === 'screenshots' ? 'active' : '' }} fw-semibold d-flex align-items-center gap-1.5 rounded-pill px-3 py-1 small" id="screenshots-tab" data-bs-toggle="tab" data-bs-target="#screenshots-pane" type="button" role="tab">
+                    <button class="nav-link {{ request('tab') === 'screenshots' ? 'active' : '' }} fw-semibold d-flex align-items-center gap-2 rounded-pill px-3.5 py-1.5 small" id="screenshots-tab" data-bs-toggle="tab" data-bs-target="#screenshots-pane" type="button" role="tab">
                         <i class="fa-solid fa-camera text-primary"></i> Screenshots & Activity
                         @php $totalWeekScreenshots = array_sum($weekScreenshotsCount ?? []); @endphp
                         @if($totalWeekScreenshots > 0)
-                            <span class="badge bg-primary text-white rounded-pill font-monospace" style="font-size: 0.68rem; padding: 2px 6px;">{{ $totalWeekScreenshots }}</span>
+                            <span class="badge bg-primary text-white rounded-pill font-monospace" style="font-size: 0.7rem; padding: 2px 7px;">{{ $totalWeekScreenshots }}</span>
                         @endif
                     </button>
                 </li>
                 @if($canViewTeam)
                     <li class="nav-item">
-                        <button class="nav-link {{ $isTeamFiltered && request('tab') !== 'screenshots' ? 'active' : '' }} fw-semibold d-flex align-items-center gap-1.5 rounded-pill px-3 py-1 small" id="team-logs-tab" data-bs-toggle="tab" data-bs-target="#team-logs" type="button" role="tab">
+                        <button class="nav-link {{ $isTeamFiltered && request('tab') !== 'screenshots' ? 'active' : '' }} fw-semibold d-flex align-items-center gap-2 rounded-pill px-3.5 py-1.5 small" id="team-logs-tab" data-bs-toggle="tab" data-bs-target="#team-logs" type="button" role="tab">
                             <i class="fa-solid fa-users-rectangle"></i> Team Logs & Audits
                         </button>
                     </li>
                 @endif
             </ul>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2.5">
                 @php
                     $wSecsRem = $wSecs % 60;
                 @endphp
-                <div class="d-flex align-items-center gap-1.5 bg-light text-dark px-2.5 py-1 rounded-pill border shadow-2xs font-sans small" style="font-size: 0.8rem;">
-                    <i class="fa-solid fa-calendar-check text-primary"></i>
-                    <span class="text-secondary fw-medium">This Week Total:</span>
-                    <strong class="font-monospace text-dark fs-6">{{ sprintf('%02d:%02d:%02d', $wHrs, $wMins, $wSecsRem) }}</strong>
-                </div>
+
 
                 @if($canViewTeam)
                     <a href="{{ route('attendance.export-csv', ['employee_id' => request('employee_id'), 'log_date' => request('log_date'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" 
-                       class="btn btn-sm btn-success rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.78rem;">
+                       class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-2xs" style="font-size: 0.8rem;">
                         <i class="fa-solid fa-file-excel me-1"></i> Export CSV
                     </a>
                 @endif
             </div>
         </div>
         
-        <div class="card-body p-3 bg-light-subtle">
+        <div class="card-body p-4 bg-body-tertiary">
             <div class="tab-content" id="timeLogsTabContent">
                 
                 <!-- My Grouped Logs Tab -->
@@ -253,201 +360,205 @@
                     
                     <div id="logs-groups-wrapper">
                         @forelse($myWeeklyGroupedLogs as $weekGroup)
-                            <!-- Week Group Section -->
-                            <div class="mb-3">
-                                <!-- Week Header Bar (Condensed Modern Aesthetic) -->
-                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-3 py-1.5 mb-2 rounded-3 week-card-header {{ $weekGroup['is_this_week'] ? 'is-current shadow-xs' : 'shadow-2xs' }}">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="rounded-circle {{ $weekGroup['is_this_week'] ? 'bg-primary text-white shadow-xs' : 'bg-secondary bg-opacity-10 text-secondary' }} d-flex align-items-center justify-content-center flex-shrink-0" style="width: 26px; height: 26px;">
-                                            <i class="fa-solid fa-calendar-week" style="font-size: 0.75rem;"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-bold text-dark text-uppercase font-monospace" style="font-size: 0.8rem; letter-spacing: 0.3px;">{{ $weekGroup['title'] }}</span>
-                                            <span class="text-secondary small font-monospace ms-1" style="font-size: 0.75rem;">({{ $weekGroup['date_range'] }})</span>
-                                        </div>
+                            <!-- Single Main Card Per Week -->
+                            <div class="card border shadow-sm rounded-4 mb-4 bg-body overflow-visible">
+                                <!-- Week Group Header (Card Top) -->
+                                <div class="card-header bg-body py-3 px-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <i class="fa-solid fa-calendar-week text-primary fs-5 me-1"></i>
+                                        <h6 class="fw-bold text-body mb-0 fs-6 me-2">{{ $weekGroup['title'] }}</h6>
                                         @if($weekGroup['is_this_week'])
-                                            <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 fw-bold text-uppercase" style="font-size: 0.62rem; letter-spacing: 0.3px;">Current Week</span>
+                                            <span class="badge bg-primary text-white rounded-pill px-3 py-1 fw-bold" style="font-size: 0.65rem;">CURRENT WEEK</span>
                                         @endif
                                     </div>
-                                    <div class="d-flex align-items-center gap-1.5 font-monospace">
-                                        <span class="small fw-semibold text-secondary text-uppercase" style="font-size: 0.72rem;">Week Total:</span>
-                                        <span class="badge {{ $weekGroup['is_this_week'] ? 'bg-primary text-white shadow-xs' : 'bg-white text-dark border' }} font-monospace fs-6 px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.85rem !important;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-secondary small font-monospace">WEEKLY TOTAL:</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-monospace px-3 py-1 fw-bold fs-6">
                                             {{ $weekGroup['total_formatted'] }}
                                         </span>
                                     </div>
                                 </div>
 
-                                <!-- Days inside this week -->
-                                @foreach($weekGroup['days'] as $dayInfo)
-                                    @php
-                                        $dateKey = $dayInfo['date_key'];
-                                        $logs = $dayInfo['logs'];
-                                        $cDate = $dateKey !== 'other' ? \Carbon\Carbon::parse($dateKey) : now();
-                                        $isToday = $cDate->isToday();
-                                        $isYesterday = $cDate->isYesterday();
-                                        $seconds = $dayInfo['total_seconds'] ?? 0;
-                                        $hrs = floor($seconds / 3600);
-                                        $mins = floor(($seconds % 3600) / 60);
-                                        $secs = $seconds % 60;
-                                    @endphp
-                                    
-                                    <!-- Standalone Floating Day Card -->
-                                    <div class="card border shadow-2xs bg-white rounded-3 mb-2.5">
-                                        <!-- Card Day Header -->
-                                        <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center rounded-top-3">
-                                            <div class="d-flex align-items-center gap-1.5">
-                                                @if($isToday)
-                                                    <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 fw-bold text-uppercase shadow-2xs" style="font-size: 0.68rem; letter-spacing: 0.3px;">Today</span>
-                                                    <span class="fw-semibold text-dark small ms-1">{{ $cDate->format('l, d M Y') }}</span>
-                                                @elseif($isYesterday)
-                                                    <span class="badge bg-secondary text-white rounded-pill px-2 py-0.5 fw-bold text-uppercase shadow-2xs" style="font-size: 0.68rem; letter-spacing: 0.3px;">Yesterday</span>
-                                                    <span class="fw-semibold text-dark small ms-1">{{ $cDate->format('l, d M Y') }}</span>
-                                                @else
-                                                    <i class="fa-regular fa-calendar text-primary me-1" style="font-size: 0.8rem;"></i>
-                                                    <span class="fw-semibold text-dark small">{{ $cDate->format('l, d M Y') }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="d-flex align-items-center gap-1.5 text-secondary small">
-                                                <span class="text-muted fw-medium" style="font-size: 0.75rem;">Day Total:</span>
-                                                <span class="badge bg-light text-dark border font-monospace px-2 py-0.5 rounded-pill fw-bold shadow-2xs" style="font-size: 0.78rem;">
-                                                    {{ sprintf('%02d:%02d:%02d', $hrs, $mins, $secs) }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Card Rows (Grid Alignment) -->
-                                        <div class="list-group list-group-flush rounded-bottom-3">
-                                            @foreach($logs as $log)
-                                                @php
-                                                    $startTime = $log->clock_in_at;
-                                                    $endTime = $log->clock_out_at;
-                                                    if ($endTime && $startTime > $endTime) {
-                                                        $temp = $startTime;
-                                                        $startTime = $endTime;
-                                                        $endTime = $temp;
-                                                    }
-                                                    $durSeconds = ($startTime && $endTime) ? $startTime->diffInSeconds($endTime) : 0;
-                                                    $durHrs = floor($durSeconds / 3600);
-                                                    $durMins = floor(($durSeconds % 3600) / 60);
-                                                    $durSecs = $durSeconds % 60;
-                                                    $durFormatted = sprintf('%02d:%02d:%02d', $durHrs, $durMins, $durSecs);
-
-                                                    $projectName = $log->project?->name ?? 'Miscellaneous';
-                                                    $colorSeed = md5($projectName);
-                                                    $hue = hexdec(substr($colorSeed, 0, 2)) % 360;
-                                                    $dotColor = "hsl({$hue}, 75%, 40%)";
-                                                    $bgColor = "hsl({$hue}, 85%, 96%)";
-                                                    $borderColor = "hsl({$hue}, 60%, 88%)";
-                                                @endphp
-
-                                                <div class="list-group-item log-item-row border-0 border-bottom bg-white {{ $loop->last ? 'rounded-bottom-3 border-bottom-0' : '' }}">
-                                                    <div class="d-flex align-items-center justify-content-between gap-2.5">
-                                                        
-                                                        <!-- Col 1: Task Description -->
-                                                        <div class="flex-grow-1 min-w-0" style="flex-basis: 35%;">
-                                                            @if($log->task && trim($log->task->title) !== '')
-                                                                <span class="text-dark fw-semibold text-truncate d-block" style="font-size: 0.875rem;" title="{{ $log->task->title }}">
-                                                                    {{ $log->task->title }}
-                                                                </span>
-                                                            @else
-                                                                <span class="text-muted small d-block" style="font-size: 0.82rem; color: #94A3B8 !important;">
-                                                                    Add description
-                                                                </span>
-                                                            @endif
-                                                        </div>
-
-                                                        <!-- Col 2: Project Pill Badge -->
-                                                        <div class="flex-shrink-0" style="width: 175px;">
-                                                            <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1.5 border font-sans text-truncate" 
-                                                                  style="background-color: {{ $bgColor }}; color: {{ $dotColor }}; border-color: {{ $borderColor }} !important; font-size: 0.75rem; font-weight: 600; max-width: 170px;">
-                                                                <span class="rounded-circle d-inline-block flex-shrink-0" style="width: 6px; height: 6px; background-color: {{ $dotColor }};"></span>
-                                                                <span class="text-truncate">{{ $projectName }}</span>
-                                                            </span>
-                                                        </div>
-
-                                                        <!-- Col 3: Time Range Badge -->
-                                                        <div class="flex-shrink-0 text-center d-flex align-items-center gap-1">
-                                                            <span class="text-secondary font-monospace px-2.5 py-0.5 rounded-pill bg-light border d-inline-flex align-items-center gap-1" style="font-size: 0.75rem; letter-spacing: 0.2px;">
-                                                                <i class="fa-regular fa-clock text-muted" style="font-size: 0.7rem;"></i>
-                                                                {{ $startTime ? $startTime->format('H:i') : '--:--' }} &ndash; {{ $endTime ? $endTime->format('H:i') : '--:--' }}
-                                                            </span>
-                                                            @if($log->clock_in_latitude && $log->clock_in_longitude)
-                                                                <button type="button" 
-                                                                        onclick="openLocationMap({{ $log->clock_in_latitude }}, {{ $log->clock_in_longitude }}, '{{ addslashes($currentUser->full_name ?? 'My Log') }}', '{{ $log->clock_in_at ? $log->clock_in_at->format('d M Y, h:i A') : '' }}', '{{ $log->clock_in_ip ?: 'N/A' }}')" 
-                                                                        class="btn btn-sm btn-light border rounded-pill px-1.5 py-0.5 text-danger d-inline-flex align-items-center gap-1 shadow-2xs hover-scale" 
-                                                                        style="font-size: 0.7rem;" 
-                                                                        title="View GPS Clock-in Location">
-                                                                    <i class="fa-solid fa-location-dot"></i>
-                                                                    <span class="d-none d-xl-inline fw-semibold text-secondary">GPS</span>
-                                                                </button>
-                                                            @endif
-                                                        </div>
-
-                                                        <!-- Col 4: Duration -->
-                                                        <div class="fw-bold text-dark font-monospace flex-shrink-0 text-end pe-2" style="min-width: 80px; font-size: 0.9rem; letter-spacing: 0.2px;">
-                                                            {{ $durFormatted }}
-                                                        </div>
-
-                                                        <!-- Col 5: Controls (Play & Actions Menu) -->
-                                                        <div class="flex-shrink-0 d-flex align-items-center gap-1.5">
-                                                            <!-- Play Button -->
-                                                            <button type="button" 
-                                                                    onclick="handleQuickRestart('{{ $log->project_id }}', '{{ addslashes($log->task?->title ?? '') }}', '{{ $log->task_id }}')" 
-                                                                    class="btn btn-light border rounded-circle text-primary action-btn-circle shadow-2xs hover-scale" 
-                                                                    title="Continue this timer">
-                                                                <i class="fa-solid fa-play" style="font-size: 0.7rem;"></i>
-                                                            </button>
-
-                                                            <!-- Actions Menu -->
-                                                            <div class="dropdown position-relative">
-                                                                <button class="btn btn-light border rounded-circle text-muted action-btn-circle shadow-2xs hover-scale" 
-                                                                        type="button" 
-                                                                        data-bs-toggle="dropdown" 
-                                                                        data-bs-display="static"
-                                                                        aria-expanded="false"
-                                                                        title="More actions">
-                                                                    <i class="fa-solid fa-ellipsis-vertical" style="font-size: 0.75rem;"></i>
-                                                                </button>
-                                                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 py-1 px-1 mt-1" style="min-width: 160px; font-size: 0.82rem; z-index: 1060; border-color: #E2E8F0 !important;">
-                                                                    @if($log->clock_in_latitude && $log->clock_in_longitude)
-                                                                        <li>
-                                                                            <button class="dropdown-item py-1.5 px-2.5 rounded-2 fw-medium d-flex align-items-center gap-2 text-danger" type="button" 
-                                                                                    onclick="openLocationMap({{ $log->clock_in_latitude }}, {{ $log->clock_in_longitude }}, '{{ addslashes($currentUser->full_name ?? 'My Log') }}', '{{ $log->clock_in_at ? $log->clock_in_at->format('d M Y, h:i A') : '' }}', '{{ $log->clock_in_ip ?: 'N/A' }}')">
-                                                                                <i class="fa-solid fa-location-dot text-danger" style="font-size: 0.8rem;"></i> View GPS Location
-                                                                            </button>
-                                                                        </li>
-                                                                        <li><hr class="dropdown-divider my-1 opacity-10"></li>
-                                                                    @endif
-                                                                    <li>
-                                                                        <button class="dropdown-item py-1.5 px-2.5 rounded-2 fw-medium d-flex align-items-center gap-2" type="button" onclick="openEditLogModal('{{ $log->id }}', '{{ addslashes($log->task?->title ?? '') }}', '{{ $log->project_id }}')">
-                                                                            <i class="fa-solid fa-pen-to-square text-primary" style="font-size: 0.8rem;"></i> Edit entry
-                                                                        </button>
-                                                                    </li>
-                                                                    <li><hr class="dropdown-divider my-1 opacity-10"></li>
-                                                                    <li>
-                                                                        <form action="{{ route('attendance.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Delete this time entry?');" class="m-0">
-                                                                            @csrf
-                                                                            @method('DELETE')
-                                                                            <button type="submit" class="dropdown-item py-1.5 px-2.5 rounded-2 text-danger fw-medium d-flex align-items-center gap-2">
-                                                                                <i class="fa-solid fa-trash-can text-danger" style="font-size: 0.8rem;"></i> Delete entry
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-
-                                                    </div>
+                                <!-- Card Body: Spacious Container for All Days -->
+                                <div class="card-body p-4 overflow-visible">
+                                    @foreach($weekGroup['days'] as $dayInfo)
+                                        @php
+                                            $dateKey = $dayInfo['date_key'];
+                                            $logs = $dayInfo['logs'];
+                                            $cDate = $dateKey !== 'other' ? \Carbon\Carbon::parse($dateKey) : now();
+                                            $isToday = $cDate->isToday();
+                                            $isYesterday = $cDate->isYesterday();
+                                            $seconds = $dayInfo['total_seconds'] ?? 0;
+                                            $hrs = floor($seconds / 3600);
+                                            $mins = floor(($seconds % 3600) / 60);
+                                            $secs = $seconds % 60;
+                                        @endphp
+                                        
+                                        <!-- Day Section Sub-Card -->
+                                        <div class="card border rounded-3 shadow-2xs mb-4 bg-white overflow-visible">
+                                            <!-- Day Header (Sub-Card Header) -->
+                                            <div class="card-header bg-light-subtle py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-primary fs-6 me-0.5"></i>
+                                                    <h6 class="fw-bold text-body mb-0 fs-6">{{ $cDate->format('D, d M') }}</h6>
+                                                    @if($isToday)
+                                                        <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.62rem;">TODAY</span>
+                                                    @elseif($isYesterday)
+                                                        <span class="badge bg-secondary text-white rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.62rem;">YESTERDAY</span>
+                                                    @endif
                                                 </div>
-                                            @endforeach
+                                                <div class="d-flex align-items-center gap-2 font-monospace text-secondary small" style="font-size: 0.82rem;">
+                                                    <span>DAY TOTAL:</span>
+                                                    <span class="badge bg-body-tertiary text-body border font-monospace px-2.5 py-1 fw-bold" style="font-size: 0.82rem;">
+                                                        {{ sprintf('%02d:%02d:%02d', $hrs, $mins, $secs) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Day Timesheet Table Container -->
+                                            <div class="table-responsive overflow-visible">
+                                                <table class="table table-hover align-middle mb-0 timesheet-table">
+                                                    <thead class="table-light text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.4px;">
+                                                        <tr>
+                                                            <th class="ps-3 py-3" style="min-width: 250px;">Task Description</th>
+                                                            <th class="py-3" style="min-width: 150px;">Project</th>
+                                                            <th class="py-3 text-center" style="min-width: 140px;">Time Range</th>
+                                                            <th class="py-3 text-center" style="min-width: 110px;">Duration</th>
+                                                            <th class="pe-3 py-3 text-end" style="min-width: 110px;">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($logs as $log)
+                                                            @php
+                                                                $startTime = $log->clock_in_at;
+                                                                $endTime = $log->clock_out_at;
+                                                                if ($endTime && $startTime > $endTime) {
+                                                                    $temp = $startTime;
+                                                                    $startTime = $endTime;
+                                                                    $endTime = $temp;
+                                                                }
+                                                                $durSeconds = ($startTime && $endTime) ? $startTime->diffInSeconds($endTime) : 0;
+                                                                $durHrs = floor($durSeconds / 3600);
+                                                                $durMins = floor(($durSeconds % 3600) / 60);
+                                                                $durSecs = $durSeconds % 60;
+                                                                $durFormatted = sprintf('%02d:%02d:%02d', $durHrs, $durMins, $durSecs);
+
+                                                                $projectName = $log->project?->name ?? 'Miscellaneous';
+                                                                $colorSeed = md5($projectName);
+                                                                $hue = hexdec(substr($colorSeed, 0, 2)) % 360;
+                                                                $dotColor = "hsl({$hue}, 75%, 40%)";
+                                                                $bgColor = "hsl({$hue}, 85%, 96%)";
+                                                                $borderColor = "hsl({$hue}, 60%, 88%)";
+                                                            @endphp
+                                                            <tr>
+                                                                <!-- Task Description -->
+                                                                <td class="ps-3 py-3">
+                                                                    <div class="fw-semibold text-body text-truncate" style="font-size: 0.88rem; max-width: 380px;" title="{{ $log->task->title ?? 'No description' }}">
+                                                                        {{ ($log->task && trim($log->task->title) !== '') ? $log->task->title : 'No description' }}
+                                                                    </div>
+                                                                </td>
+
+                                                                <!-- Project -->
+                                                                <td class="py-3">
+                                                                    <span class="badge rounded-pill px-3 py-1 d-inline-flex align-items-center gap-2 border font-sans text-truncate" 
+                                                                          style="background-color: {{ $bgColor }}; color: {{ $dotColor }}; border-color: {{ $borderColor }} !important; font-size: 0.74rem; font-weight: 600; max-width: 180px;">
+                                                                        <span class="rounded-circle d-inline-block flex-shrink-0" style="width: 6px; height: 6px; background-color: {{ $dotColor }};"></span>
+                                                                        <span class="text-truncate">{{ $projectName }}</span>
+                                                                    </span>
+                                                                </td>
+
+                                                                <!-- Time Range -->
+                                                                <td class="py-3 text-center">
+                                                                    <span class="badge bg-body-tertiary text-secondary border px-3 py-1 font-monospace fw-normal" style="font-size: 0.76rem;">
+                                                                        <i class="fa-regular fa-clock me-1 text-muted"></i>
+                                                                        {{ $startTime ? $startTime->format('H:i') : '--:--' }} &ndash; {{ $endTime ? $endTime->format('H:i') : '--:--' }}
+                                                                    </span>
+                                                                </td>
+
+                                                                <!-- Duration -->
+                                                                <td class="py-3 text-center font-monospace fw-bold text-body" style="font-size: 0.88rem;">
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill font-monospace fw-bold" style="font-size: 0.8rem;">
+                                                                        {{ $durFormatted }}
+                                                                    </span>
+                                                                </td>
+
+                                                                <!-- Actions -->
+                                                                <td class="pe-3 py-3 text-end">
+                                                                    <div class="d-inline-flex align-items-center gap-2 justify-content-end">
+                                                                        @if($log->clock_in_latitude && $log->clock_in_longitude)
+                                                                            <button type="button" 
+                                                                                    onclick="openLocationMap({{ $log->clock_in_latitude }}, {{ $log->clock_in_longitude }}, '{{ addslashes($currentUser->full_name ?? 'My Log') }}', '{{ $log->clock_in_at ? $log->clock_in_at->format('d M Y, h:i A') : '' }}', '{{ $log->clock_in_ip ?: 'N/A' }}')" 
+                                                                                    class="btn btn-sm btn-light border rounded-pill px-2 py-1 text-danger d-inline-flex align-items-center gap-1 shadow-sm" 
+                                                                                    style="font-size: 0.68rem;" 
+                                                                                    title="View GPS Clock-in Location">
+                                                                                <i class="fa-solid fa-location-dot"></i>
+                                                                            </button>
+                                                                        @endif
+
+                                                                        @if($weekGroup['is_this_week'])
+                                                                            <button type="button" 
+                                                                                    onclick="handleQuickRestart('{{ $log->project_id }}', '{{ addslashes($log->task?->title ?? '') }}', '{{ $log->task_id }}')" 
+                                                                                    class="btn btn-light border rounded-circle text-primary action-btn-circle shadow-sm" 
+                                                                                    title="Continue this timer"
+                                                                                    style="width: 28px; height: 28px;">
+                                                                                <i class="fa-solid fa-play" style="font-size: 0.68rem;"></i>
+                                                                            </button>
+                                                                        @endif
+
+                                                                        <div class="dropdown position-relative">
+                                                                            <button class="btn btn-light border rounded-circle text-muted action-btn-circle shadow-sm" 
+                                                                                    type="button" 
+                                                                                    data-bs-toggle="dropdown"
+                                                                                    data-bs-display="static" 
+                                                                                    aria-expanded="false"
+                                                                                    title="More actions"
+                                                                                    style="width: 28px; height: 28px;">
+                                                                                <i class="fa-solid fa-ellipsis-vertical" style="font-size: 0.75rem;"></i>
+                                                                            </button>
+                                                                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 py-1 px-1 mt-1" style="min-width: 160px; font-size: 0.82rem; z-index: 9999 !important; border-color: var(--bs-border-color) !important;">
+                                                                                @if($log->clock_in_latitude && $log->clock_in_longitude)
+                                                                                    <li>
+                                                                                        <button class="dropdown-item py-2 px-3 rounded-2 fw-medium d-flex align-items-center gap-2 text-danger" type="button" 
+                                                                                                onclick="openLocationMap({{ $log->clock_in_latitude }}, {{ $log->clock_in_longitude }}, '{{ addslashes($currentUser->full_name ?? 'My Log') }}', '{{ $log->clock_in_at ? $log->clock_in_at->format('d M Y, h:i A') : '' }}', '{{ $log->clock_in_ip ?: 'N/A' }}')">
+                                                                                            <i class="fa-solid fa-location-dot text-danger" style="font-size: 0.8rem;"></i> View GPS Location
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    <li><hr class="dropdown-divider my-1 opacity-10"></li>
+                                                                                @endif
+                                                                                @if($weekGroup['is_this_week'])
+                                                                                    <li>
+                                                                                        <button class="dropdown-item py-2 px-3 rounded-2 fw-medium d-flex align-items-center gap-2" type="button" onclick="openEditLogModal('{{ $log->id }}', '{{ addslashes($log->task?->title ?? '') }}', '{{ $log->project_id }}')">
+                                                                                            <i class="fa-solid fa-pen-to-square text-primary" style="font-size: 0.8rem;"></i> Edit entry
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    <li><hr class="dropdown-divider my-1 opacity-10"></li>
+                                                                                @endif
+                                                                                <li>
+                                                                                    <form action="{{ route('attendance.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Delete this time entry?');" class="m-0">
+                                                                                        @csrf
+                                                                                        @method('DELETE')
+                                                                                        <button type="submit" class="dropdown-item py-2 px-3 rounded-2 text-danger fw-medium d-flex align-items-center gap-2">
+                                                                                            <i class="fa-solid fa-trash-can text-danger" style="font-size: 0.8rem;"></i> Delete entry
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </li>
+                                                                            </ul>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         @empty
-                            <div class="text-center py-5 text-muted bg-white rounded-4 border shadow-sm">
+                            <div class="text-center py-5 text-muted bg-body rounded-4 border shadow-sm p-4">
                                 <i class="fa-solid fa-stopwatch fs-1 opacity-40 mb-3 d-block text-primary"></i>
-                                <h6 class="fw-bold text-dark mb-1">No time entries recorded yet</h6>
+                                <h6 class="fw-bold text-body mb-1">No time entries recorded yet</h6>
                                 <p class="text-secondary small mb-0">Use the live timer bar at the top to start tracking your activities.</p>
                             </div>
                         @endforelse
@@ -742,7 +853,7 @@
                                                 </td>
                                                 <td class="py-2.5 text-center">
                                                     <span class="badge {{ $stat['percent'] >= 100 ? 'bg-success-subtle text-success border-success-subtle' : ($stat['percent'] > 0 ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-light text-muted border') }} border px-2.5 py-1 rounded-pill font-monospace fw-bold shadow-2xs" style="font-size: 0.75rem;">
-                                                        <i class="fa-solid fa-clock me-1"></i>{{ $stat['hours'] }} / 40.0 Hrs
+                                                        <i class="fa-solid fa-clock me-1"></i>{{ $stat['hours'] >= 1.0 ? $stat['hours'] . ' Hrs' : ($stat['formatted_total'] ?? '00:00:00') }} / 40.0 Hrs
                                                     </span>
                                                 </td>
                                                 <td class="py-2.5 text-center font-monospace">
@@ -1028,7 +1139,7 @@
     }
 
     // Start Silent Screen Capture via Desktop Companion (Zero Popups)
-    async function startScreenCaptureTracker(retryCount = 0) {
+    async function startScreenCaptureTracker() {
         const userId = {{ $currentUser->id }};
         const projSelect = document.getElementById('project_id_select');
         const taskInput = document.getElementById('task_title_input');
@@ -1058,9 +1169,24 @@
 
             const data = await res.json();
             if (data.success) {
-                updateCaptureBadgeStatus(true, 'Desktop Tracker Active (2m)');
+                updateCaptureBadgeStatus(true, 'Desktop Tracker Active');
                 console.log('✅ Desktop Tracker connected and capturing silently.');
                 
+                // Schedule automatic gallery refresh at 2.5s and 5s to show immediate initial screenshot
+                setTimeout(() => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (currentSelectedScreenshotDate === todayStr && currentSelectedScreenshotUserId == userId) {
+                        refreshCurrentDayScreenshots(false);
+                    }
+                }, 2500);
+
+                setTimeout(() => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (currentSelectedScreenshotDate === todayStr && currentSelectedScreenshotUserId == userId) {
+                        refreshCurrentDayScreenshots(false);
+                    }
+                }, 5000);
+
                 // Set auto-refresh of today's gallery every 2 minutes
                 if (window.desktopTrackerStatusInterval) clearInterval(window.desktopTrackerStatusInterval);
                 window.desktopTrackerStatusInterval = setInterval(() => {
@@ -1071,19 +1197,9 @@
                 }, 125000);
             }
         } catch (err) {
-            if (retryCount === 0) {
-                // Auto-wake local desktop tracker via syncwithteam:// system protocol
-                console.info('Waking up desktop tracker via system protocol syncwithteam://...');
-                launchDesktopTrackerProtocol();
-                
-                // Retry after 1.8 seconds to allow background startup
-                setTimeout(() => {
-                    startScreenCaptureTracker(1);
-                }, 1800);
-            } else {
-                console.info('Desktop tracker not installed yet. To install 1-time, click Download Tracker App.');
-                updateCaptureBadgeStatus(false, 'Companion Offline');
-            }
+            updateCaptureBadgeStatus(false, 'Companion Offline');
+            showToast('warning', 'Desktop Tracker Companion is offline. Please launch Start-Tracker.bat to enable background screenshots.');
+            console.info('Desktop companion offline. Run desktop-tracker/Start-Tracker.bat to enable screen capture.');
         }
     }
 
@@ -1616,6 +1732,55 @@
     }
 
 
+    function filterProjectDropdown(inputEl) {
+        const term = inputEl.value.toLowerCase().trim();
+        const menu = inputEl.closest('.dropdown-menu');
+        if (menu) {
+            const items = menu.querySelectorAll('.project-item-btn');
+            items.forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                const parentLi = btn.closest('li');
+                if (parentLi) {
+                    if (text.includes(term)) {
+                        parentLi.style.display = '';
+                    } else {
+                        parentLi.style.display = 'none';
+                    }
+                }
+            });
+        }
+    }
+
+    function selectProjectCustom(id, name, btnEl) {
+        const hiddenSelect = document.getElementById('project_id_select');
+        const label = document.getElementById('custom_project_label');
+        
+        if (hiddenSelect) {
+            hiddenSelect.value = id;
+        }
+        if (label) {
+            label.textContent = name;
+        }
+
+        if (btnEl) {
+            const menu = btnEl.closest('.dropdown-menu');
+            if (menu) {
+                menu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('active', 'bg-primary', 'text-white');
+                    const chk = item.querySelector('.check-mark');
+                    if (chk) chk.classList.add('d-none');
+                });
+                btnEl.classList.add('active', 'bg-primary', 'text-white');
+                const chk = btnEl.querySelector('.check-mark');
+                if (chk) chk.classList.remove('d-none');
+            }
+        }
+
+        if (hiddenSelect && document.getElementById('active-tracker-form')) {
+            handleProjectChange(hiddenSelect);
+        }
+    }
+
     function handleProjectChange(selectEl) {
         const form = document.getElementById('active-tracker-form');
         if (form) {
@@ -1730,42 +1895,91 @@
         const clockInAt = attendance.clock_in_at;
         const currentProjId = attendance.project_id;
         
+        let activeProjName = '+ Project';
+        let customItemsHtml = `
+            <li>
+                <button class="dropdown-item py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body ${!currentProjId ? 'active bg-primary text-white' : ''}" 
+                        type="button" 
+                        onclick="selectProjectCustom('', '+ Project', this)">
+                    <span>+ Project</span>
+                    <i class="fa-solid fa-check small check-mark ${!currentProjId ? '' : 'd-none'}"></i>
+                </button>
+            </li>
+            <li><hr class="dropdown-divider my-1 opacity-10"></li>
+        `;
+
         let projectOptions = '<option value="">+ Project</option>';
         @foreach($projects as $project)
+            if (currentProjId == {{ $project->id }}) {
+                activeProjName = "{{ addslashes($project->name) }}";
+            }
             projectOptions += '<option value="{{ $project->id }}" ' + (currentProjId == {{ $project->id }} ? 'selected' : '') + '>{{ addslashes($project->name) }}</option>';
+            
+            const isSel{{ $project->id }} = (currentProjId == {{ $project->id }});
+            customItemsHtml += `
+                <li>
+                    <button class="dropdown-item py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body ${isSel{{ $project->id }} ? 'active bg-primary text-white' : ''}" 
+                            type="button" 
+                            onclick="selectProjectCustom('{{ $project->id }}', '{{ addslashes($project->name) }}', this)">
+                        <span class="text-truncate me-2">{{ addslashes($project->name) }}</span>
+                        <i class="fa-solid fa-check small check-mark ${isSel{{ $project->id }} ? '' : 'd-none'}"></i>
+                    </button>
+                </li>
+            `;
         @endforeach
 
         container.innerHTML = `
             <form id="active-tracker-form" onsubmit="handleTrackerSubmit(event, 'switch')" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 @csrf
                 <div class="d-flex align-items-center flex-grow-1 gap-3 min-w-0" style="min-width: 280px;">
-                    <div class="input-group bg-light rounded-pill px-3 py-1.5 border shadow-2xs flex-grow-1">
+                    <div class="input-group tracker-pill-input px-3 py-1 flex-grow-1">
                         <span class="input-group-text bg-transparent border-0 text-primary ps-0 pe-2">
-                            <i class="fa-solid fa-bolt"></i>
+                            <i class="fa-solid fa-bolt fs-6"></i>
                         </span>
-                        <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-dark" style="font-size: 0.925rem;" 
+                        <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-body" style="font-size: 0.9rem;" 
                                placeholder="What are you working on?"
                                value="${taskTitle}">
                     </div>
-                    <div class="input-group bg-light rounded-pill px-3 py-1.5 border shadow-2xs flex-shrink-0" style="width: 220px;">
-                        <span class="input-group-text bg-transparent border-0 text-warning ps-0 pe-2">
-                            <i class="fa-solid fa-folder-closed"></i>
-                        </span>
-                        <select id="project_id_select" name="project_id" class="form-select border-0 bg-transparent shadow-none fw-semibold text-dark" style="font-size: 0.88rem;" onchange="handleProjectChange(this)">
+                    <div class="input-group tracker-pill-input px-3 py-1 flex-shrink-0 position-relative dropdown" style="width: 200px;">
+                        <select id="project_id_select" name="project_id" class="d-none" onchange="handleProjectChange(this)">
                             ${projectOptions}
                         </select>
+                        <button type="button" 
+                                class="btn btn-transparent border-0 shadow-none fw-semibold text-body py-1 px-0 text-start text-truncate flex-grow-1 d-flex align-items-center justify-content-between" 
+                                id="custom_project_btn"
+                                data-bs-toggle="dropdown" 
+                                data-bs-display="static" 
+                                aria-expanded="false" 
+                                style="font-size: 0.85rem;">
+                            <span class="text-truncate me-1" id="custom_project_label">${activeProjName}</span>
+                            <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 p-1 mt-1 font-sans" style="min-width: 220px; z-index: 9999 !important; border-color: var(--bs-border-color) !important;" id="custom_project_menu">
+                            <li class="px-2 py-1 mb-1" onclick="event.stopPropagation();">
+                                <div class="input-group input-group-sm bg-body-tertiary rounded-2 border px-2 py-1">
+                                    <span class="input-group-text bg-transparent border-0 text-muted p-0 me-1.5" style="font-size: 0.75rem;">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-transparent border-0 shadow-none p-0 small text-body" placeholder="Search project..." onkeyup="filterProjectDropdown(this)" onclick="event.stopPropagation();">
+                                </div>
+                            </li>
+                            <li onclick="event.stopPropagation();"><hr class="dropdown-divider my-1 opacity-10"></li>
+                            <div class="project-items-list" style="max-height: 200px; overflow-y: auto;">
+                                ${customItemsHtml}
+                            </div>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 ms-auto">
-                    <div class="d-flex align-items-center gap-2 text-success px-4 py-1.5 rounded-pill border border-success-subtle shadow-2xs" style="background-color: #ECFDF5;">
-                        <span class="spinner-grow spinner-grow-sm text-success live-pulse" style="width: 8px; height: 8px;"></span>
-                        <div id="logs-running-timer" class="fs-4 fw-bold font-monospace text-success lh-1" data-start="${clockInAt}">
+                    <div class="d-flex align-items-center gap-2 text-success rounded-pill border border-success-subtle shadow-sm" style="background-color: #ECFDF5; padding: 0.45rem 1.1rem !important;">
+                        <span class="spinner-grow spinner-grow-sm text-success live-pulse flex-shrink-0" style="width: 8px; height: 8px;"></span>
+                        <div id="logs-running-timer" class="fs-5 fw-bold font-monospace text-success lh-1" data-start="${clockInAt}">
                             00:00:00
                         </div>
                     </div>
-                    <button type="button" onclick="handleStopTimer()" class="btn btn-danger px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.85rem; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-square"></i> Stop
+                    <button type="button" onclick="handleStopTimer()" class="btn btn-danger btn-sm px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.8rem; letter-spacing: 0.4px;">
+                        <i class="fa-solid fa-square" style="font-size: 0.75rem;"></i> Stop
                     </button>
                 </div>
             </form>
@@ -1782,18 +1996,15 @@
             <form id="idle-tracker-form" onsubmit="handleTrackerSubmit(event, 'start')" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 @csrf
                 <div class="d-flex align-items-center flex-grow-1 gap-3 min-w-0" style="min-width: 280px;">
-                    <div class="input-group bg-light rounded-pill px-3 py-1.5 border shadow-2xs flex-grow-1">
+                    <div class="input-group tracker-pill-input px-3 py-1 flex-grow-1">
                         <span class="input-group-text bg-transparent border-0 text-muted ps-0 pe-2">
-                            <i class="fa-solid fa-pen-to-square"></i>
+                            <i class="fa-solid fa-pen-to-square" style="font-size: 0.85rem;"></i>
                         </span>
-                        <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-dark" style="font-size: 0.925rem;" 
+                        <input type="text" id="task_title_input" name="task_title" class="form-control border-0 shadow-none bg-transparent py-1 fw-semibold text-body" style="font-size: 0.9rem;" 
                                placeholder="What are you working on?">
                     </div>
-                    <div class="input-group bg-light rounded-pill px-3 py-1.5 border shadow-2xs flex-shrink-0" style="width: 220px;">
-                        <span class="input-group-text bg-transparent border-0 text-warning ps-0 pe-2">
-                            <i class="fa-solid fa-folder-closed"></i>
-                        </span>
-                        <select id="project_id_select" name="project_id" class="form-select border-0 bg-transparent shadow-none fw-semibold text-dark" style="font-size: 0.88rem;">
+                    <div class="input-group tracker-pill-input px-3 py-1 flex-shrink-0 position-relative dropdown" style="width: 200px;">
+                        <select id="project_id_select" name="project_id" class="d-none">
                             <option value="">+ Project</option>
                             @foreach($projects as $project)
                                 <option value="{{ $project->id }}">
@@ -1801,14 +2012,56 @@
                                 </option>
                             @endforeach
                         </select>
+                        <button type="button" 
+                                class="btn btn-transparent border-0 shadow-none fw-semibold text-body py-1 px-0 text-start text-truncate flex-grow-1 d-flex align-items-center justify-content-between" 
+                                id="custom_project_btn"
+                                data-bs-toggle="dropdown" 
+                                data-bs-display="static" 
+                                aria-expanded="false" 
+                                style="font-size: 0.85rem;">
+                            <span class="text-truncate me-1" id="custom_project_label">+ Project</span>
+                            <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 p-1 mt-1 font-sans" style="min-width: 220px; z-index: 9999 !important; border-color: var(--bs-border-color) !important;" id="custom_project_menu">
+                            <li class="px-2 py-1 mb-1" onclick="event.stopPropagation();">
+                                <div class="input-group input-group-sm bg-body-tertiary rounded-2 border px-2 py-1">
+                                    <span class="input-group-text bg-transparent border-0 text-muted p-0 me-1.5" style="font-size: 0.75rem;">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-transparent border-0 shadow-none p-0 small text-body" placeholder="Search project..." onkeyup="filterProjectDropdown(this)" onclick="event.stopPropagation();">
+                                </div>
+                            </li>
+                            <li onclick="event.stopPropagation();"><hr class="dropdown-divider my-1 opacity-10"></li>
+                            <div class="project-items-list" style="max-height: 200px; overflow-y: auto;">
+                                <li>
+                                    <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body active bg-primary text-white" 
+                                            type="button" 
+                                            onclick="selectProjectCustom('', '+ Project', this)">
+                                        <span>+ Project</span>
+                                        <i class="fa-solid fa-check small check-mark"></i>
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider my-1 opacity-10"></li>
+                                @foreach($projects as $project)
+                                    <li>
+                                        <button class="dropdown-item project-item-btn py-2 px-3 rounded-2 fw-medium d-flex align-items-center justify-content-between text-body" 
+                                                type="button" 
+                                                onclick="selectProjectCustom('{{ $project->id }}', '{{ addslashes($project->name) }}', this)">
+                                            <span class="text-truncate me-2">{{ $project->name }}</span>
+                                            <i class="fa-solid fa-check small check-mark d-none"></i>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </div>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 ms-auto">
-                    <div class="fs-4 fw-bold text-secondary opacity-75 font-monospace pe-2 lh-1" style="letter-spacing: 0.5px;">
+                    <div class="fs-5 fw-bold text-secondary opacity-75 font-monospace pe-2 lh-1" style="letter-spacing: 0.3px;">
                         00:00:00
                     </div>
-                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.85rem; letter-spacing: 0.5px;">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 py-2 fw-bold text-uppercase rounded-pill shadow-sm d-flex align-items-center gap-2" style="font-size: 0.8rem; letter-spacing: 0.4px;">
                         <i class="fa-solid fa-play" style="font-size: 0.75rem;"></i> Start
                     </button>
                 </div>
